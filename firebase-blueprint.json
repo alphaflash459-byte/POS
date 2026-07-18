@@ -1,0 +1,90 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Stock inventory items catalog",
+      "type": "object",
+      "properties": {
+        "id": { "type": "integer", "description": "Unique product custom ID" },
+        "sku": { "type": "string", "description": "Stock keeping unit" },
+        "name": { "type": "string", "description": "Khmer name of the product" },
+        "category": { "type": "string", "description": "Category of the product" },
+        "cost": { "type": "number", "description": "Wholesale cost price" },
+        "price": { "type": "number", "description": "POS selling price" },
+        "stock": { "type": "integer", "description": "Available stock quantity" },
+        "color": { "type": "string", "description": "Visual tailwind category color designation" },
+        "image": { "type": "string", "description": "Optional Base64 or Unsplash image URL string" }
+      },
+      "required": ["id", "sku", "name", "cost", "price", "stock"]
+    },
+    "StockLog": {
+      "title": "StockLog",
+      "description": "Inventory ledger adjustment events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "sku": { "type": "string" },
+        "productName": { "type": "string" },
+        "type": { "type": "string", "enum": ["IN", "OUT"] },
+        "qty": { "type": "integer" },
+        "prevStock": { "type": "integer" },
+        "newStock": { "type": "integer" },
+        "note": { "type": "string" }
+      },
+      "required": ["id", "timestamp", "productName", "type", "qty", "prevStock", "newStock"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "POS checkout sales invoice records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "INV-XXXXXX styled invoice ID" },
+        "date": { "type": "string", "description": "Khmer localized display date" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "customerName": { "type": "string" },
+        "customerPhone": { "type": "string" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "netTotal": { "type": "number" },
+        "paymentMethod": { "type": "string", "enum": ["CASH", "QR"] },
+        "cashReceived": { "type": "number" },
+        "changeDollar": { "type": "number" },
+        "changeRiel": { "type": "integer" }
+      },
+      "required": ["id", "date", "timestamp", "items", "subtotal", "discount", "netTotal", "paymentMethod"]
+    },
+    "ShopSettings": {
+      "title": "ShopSettings",
+      "description": "Store branding details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "qrImage": { "type": "string" }
+      },
+      "required": ["name"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Stored products catalog under user document space"
+    },
+    "/stock_logs/{logId}": {
+      "schema": "StockLog",
+      "description": "Ledger adjustment logs event track"
+    },
+    "/sales/{saleId}": {
+      "schema": "Transaction",
+      "description": "POS invoice transactions"
+    },
+    "/settings/shop": {
+      "schema": "ShopSettings",
+      "description": "Branding settings details"
+    }
+  }
+}

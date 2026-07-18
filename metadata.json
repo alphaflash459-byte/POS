@@ -1,0 +1,6 @@
+{
+  "name": "Point of Sale",
+  "description": "A robust, fully-featured, offline-first Point of Sale (POS) system with interactive cart, product inventory, transaction ledger, and high-fidelity file exports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
