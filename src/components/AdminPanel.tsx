@@ -268,7 +268,7 @@ export default function AdminPanel({ activeTab, onSetActiveUser, activeUserId, o
                           // For now, let's keep the active user switch functionality, but
                           // the prompt asked not to use the app like a user. 
                           // The dashboard itself is replacing the POS view for admin.
-                          onToast(`មុខងារចូលមើលហាងត្រូវបានបិទសម្រាប់ Dashboard រួម។ ទិន្នន័យ ${u.username} មាននៅក្នុងរបាយការណ៍រួម។`, 'info');
+                          onToast(`មុខងារចូលមើលហាងត្រូវបានបិទសម្រាប់ទិដ្ឋភាពរួម។ ទិន្នន័យ ${u.username} មាននៅក្នុងរបាយការណ៍រួម។`, 'info');
                         }}
                         className="inline-flex items-center gap-1.5 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg text-xs font-bold transition border border-indigo-100"
                       >

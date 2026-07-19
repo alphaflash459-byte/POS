@@ -15,7 +15,7 @@ import {
   Cloud,
   Users,
   Settings
-} from 'lucide-react';
+, FileSpreadsheet } from 'lucide-react';
 import { User } from './types';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './firebase.ts';
@@ -522,6 +522,28 @@ export default function App() {
     });
   };
 
+    const handleSetCartQty = (productId: number, qty: number) => {
+    setCart((prevCart) => {
+      const idx = prevCart.findIndex((item) => item.product.id === productId);
+      if (idx === -1) return prevCart;
+
+      const newQty = qty;
+      if (newQty <= 0) {
+        return prevCart.filter((item) => item.product.id !== productId);
+      } else if (newQty > prevCart[idx].product.stock) {
+        showToast(`ស្តុកមានកំណត់ត្រឹម ${prevCart[idx].product.stock} !`, 'error');
+        // Optionally set to max stock
+        const updated = [...prevCart];
+        updated[idx].quantity = prevCart[idx].product.stock;
+        return updated;
+      }
+
+      const updated = [...prevCart];
+      updated[idx].quantity = newQty;
+      return updated;
+    });
+  };
+
   const handleUpdateCartQty = (productId: number, change: number) => {
     setCart((prevCart) => {
       const idx = prevCart.findIndex((item) => item.product.id === productId);
@@ -973,6 +995,7 @@ export default function App() {
                 cart={cart}
                 onAddToCart={handleAddToCart}
                 onUpdateCartQty={handleUpdateCartQty}
+                onSetCartQty={handleSetCartQty}
                 onClearCart={handleClearCart}
                 onCheckout={handleCheckout}
                 shopSettings={shopSettings}
@@ -1029,7 +1052,6 @@ export default function App() {
                   setInvoiceToDelete(txn);
                   setIsDeleteInvoiceOpen(true);
                 }}
-                onExportSalesHistory={handleExportSalesHistory}
               />
             )}
           </div>
@@ -1139,6 +1161,14 @@ export default function App() {
                         កំណត់ហាង
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={handleExportSalesHistory}
+                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold py-2.5 px-6 rounded-xl text-xs md:text-sm active:scale-95 transition shadow-sm w-full flex items-center justify-center gap-2"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      ទាញយក Excel
+                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -1281,7 +1311,7 @@ export default function App() {
       <ConfirmationModal
         isOpen={isClearLogsOpen}
         title="លុបកំណត់ត្រាទាំងអស់?"
-        message="តើអ្នកពិតជាចង់លុបកំណត់ត្រាចេញចូលស្តុកទាំងអស់ចេញពី Ledger មែនទេ? សកម្មភាពនេះនឹងលុបរាល់ប្រវត្តិស្តុកតាំងពីដើមមក។"
+        message="តើអ្នកពិតជាចង់លុបកំណត់ត្រាចេញចូលស្តុកទាំងអស់ចេញពី កំណត់ត្រា មែនទេ? សកម្មភាពនេះនឹងលុបរាល់ប្រវត្តិស្តុកតាំងពីដើមមក។"
         onConfirm={() => {
           setStockLogs([]);
           if (user) {

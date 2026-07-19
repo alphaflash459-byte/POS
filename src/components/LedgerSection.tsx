@@ -39,13 +39,13 @@ export default function LedgerSection({
 
   return (
     <section id="sec-sheets" className="flex flex-col gap-4 md:gap-6 w-full font-khmer animate-fadeIn">
-      <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-5 w-full relative overflow-hidden">
-        <div className="absolute -left-4 -top-4 w-32 h-32 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full opacity-50 pointer-events-none"></div>
+      <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col gap-5 w-full relative overflow-hidden">
+        <div className="absolute -left-4 -top-4 w-32 h-32 bg-white rounded-full opacity-50 pointer-events-none"></div>
 
         
 
         {/* Ledger Filter & Search controls */}
-        <div className="flex flex-row gap-3 items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-100 z-10">
+        <div className="flex flex-row gap-3 items-center justify-between bg-slate-50 p-3 rounded-2xl border border-slate-200/60 z-10">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <input
@@ -68,14 +68,14 @@ export default function LedgerSection({
 
         {/* Dynamic logs listing */}
         {filteredLogs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-slate-400 z-10 bg-white rounded-3xl">
+          <div className="flex flex-col items-center justify-center py-16 text-slate-400 z-10 bg-white rounded-2xl">
             <AlertCircle className="w-12 h-12 text-slate-200 mb-3" />
             <p className="text-xs md:text-sm font-semibold">មិនទាន់មានការផ្លាស់ប្តូរស្តុកឡើយ</p>
           </div>
         ) : (
           <>
             {/* Unified Table View */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden w-full z-10">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden w-full z-10">
               <div className="overflow-x-hidden">
                 <table className="w-full text-left text-sm text-slate-600 table-fixed">
                   <colgroup>

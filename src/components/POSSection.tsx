@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, ChevronDown, ArrowLeft, ShoppingCart, Trash2, Minus, Plus, Banknote, QrCode, FileSpreadsheet, Package } from 'lucide-react';
 import { Product, CartItem, ShopSettings } from '../types.ts';
 import { CATEGORIES, EXCHANGE_RATE } from '../data.ts';
@@ -13,6 +13,7 @@ interface POSSectionProps {
   cart: CartItem[];
   onAddToCart: (p: Product) => void;
   onUpdateCartQty: (productId: number, change: number) => void;
+  onSetCartQty: (productId: number, qty: number) => void;
   onClearCart: () => void;
   onCheckout: (
     customerName: string,
@@ -24,11 +25,44 @@ interface POSSectionProps {
   shopSettings: ShopSettings;
 }
 
+function CartQtyInput({ item, onSetQty, onRemove }: { item: CartItem, onSetQty: (id: number, qty: number) => void, onRemove: (id: number) => void }) {
+  const [localVal, setLocalVal] = useState<string>(item.quantity.toString());
+
+  useEffect(() => {
+    if (parseInt(localVal) !== item.quantity) {
+      setLocalVal(item.quantity.toString());
+    }
+  }, [item.quantity]);
+
+  return (
+    <input
+      type="number"
+      min="1"
+      value={localVal}
+      onChange={(e) => {
+        setLocalVal(e.target.value);
+        const val = parseInt(e.target.value);
+        if (!isNaN(val) && val > 0) {
+          onSetQty(item.product.id, val);
+        }
+      }}
+      onBlur={() => {
+        const val = parseInt(localVal);
+        if (isNaN(val) || val <= 0) {
+          onRemove(item.product.id);
+        }
+      }}
+      className="w-full text-center text-xs font-bold text-slate-800 font-sans bg-slate-50 border border-slate-200/60 p-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100"
+    />
+  );
+}
+
 export default function POSSection({
   products,
   cart,
   onAddToCart,
   onUpdateCartQty,
+  onSetCartQty,
   onClearCart,
   onCheckout,
   shopSettings,
@@ -95,8 +129,8 @@ export default function POSSection({
           }`}
         >
           {/* Search, Filter Category */}
-          <div className="bg-white p-4 rounded-3xl shadow-sm border border-slate-100 flex gap-3 relative overflow-hidden">
-            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full opacity-50 pointer-events-none"></div>
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/60 flex gap-3 relative overflow-hidden">
+            <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white rounded-full opacity-50 pointer-events-none"></div>
 
             <div className="relative flex-1 z-10">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -129,7 +163,7 @@ export default function POSSection({
           </div>
 
           {/* Catalog Selection */}
-          <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-slate-100 flex-grow min-h-[350px]">
+          <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-200/60 flex-grow min-h-[350px]">
             {filteredProducts.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                 <Trash2 className="w-12 h-12 text-slate-200 mb-3" />
@@ -143,13 +177,13 @@ export default function POSSection({
                     <div
                       key={p.id}
                       onClick={() => !isOutOfStock && onAddToCart(p)}
-                      className={`group relative flex flex-col justify-between p-3 rounded-3xl border transition-all duration-200 transform active:scale-[0.96] ${
+                      className={`group relative flex flex-col justify-between p-3 rounded-2xl border transition-all duration-200 transform active:scale-[0.96] ${
                         isOutOfStock
                           ? 'border-slate-200 bg-slate-50 opacity-65 cursor-not-allowed'
-                          : 'border-slate-100 hover:border-blue-400 bg-white shadow-sm hover:shadow-md cursor-pointer'
+                          : 'border-slate-200/60 hover:border-blue-400 bg-white shadow-sm hover:shadow-sm cursor-pointer'
                       }`}
                     >
-                      <div className="h-24 sm:h-28 w-full rounded-2xl overflow-hidden mb-3 relative bg-slate-100 shadow-inner">
+                      <div className="h-24 sm:h-28 w-full rounded-2xl overflow-hidden mb-3 relative bg-slate-100 shadow-sm">
                         {p.image ? (
                           <img
                             src={p.image}
@@ -178,7 +212,7 @@ export default function POSSection({
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-100 border-dashed font-sans">
+                      <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-200/60 border-dashed font-sans">
                         <span className="text-sm font-black text-blue-600">${p.price.toFixed(2)}</span>
                         <span
                           className={`text-[9px] font-bold ${
@@ -202,9 +236,9 @@ export default function POSSection({
             posMobileView === 'cart' ? 'flex' : 'hidden lg:flex'
           }`}
         >
-          <div className="bg-white rounded-3xl shadow-lg shadow-blue-900/5 border border-slate-100 flex flex-col h-full min-h-[500px] overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-sm shadow-sm border border-slate-200/60 flex flex-col h-full min-h-[500px] overflow-hidden">
             {/* Header */}
-            <div className="p-4 md:p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div className="p-4 md:p-5 border-b border-slate-200/60 flex justify-between items-center bg-slate-50/50">
               <div className="flex items-center gap-2">
                 <button
                   type="button"
@@ -229,7 +263,7 @@ export default function POSSection({
             </div>
 
             {/* Inputs */}
-            <div className="p-4 md:p-5 bg-slate-50/40 border-b border-slate-100 grid grid-cols-2 gap-3">
+            <div className="p-4 md:p-5 bg-slate-50/40 border-b border-slate-200/60 grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[10px] text-slate-500 mb-1 font-bold uppercase tracking-wider">
                   ឈ្មោះអតិថិជន
@@ -275,24 +309,12 @@ export default function POSSection({
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-shrink-0 bg-slate-50 p-1 rounded-xl border border-slate-100">
-                        <button
-                          type="button"
-                          onClick={() => onUpdateCartQty(item.product.id, -1)}
-                          className="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-600 flex items-center justify-center shadow-sm transition-colors active:scale-95"
-                        >
-                          <Minus className="w-3 h-3" />
-                        </button>
-                        <span className="w-8 text-center text-xs font-bold text-slate-800 font-sans">
-                          {item.quantity}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onUpdateCartQty(item.product.id, 1)}
-                          className="w-7 h-7 rounded-lg bg-white hover:bg-slate-200 text-slate-600 flex items-center justify-center shadow-sm transition-colors active:scale-95"
-                        >
-                          <Plus className="w-3 h-3" />
-                        </button>
+                      <div className="flex items-center flex-shrink-0 w-16">
+                        <CartQtyInput 
+                          item={item} 
+                          onSetQty={onSetCartQty} 
+                          onRemove={(id) => onUpdateCartQty(id, -item.quantity)} 
+                        />
                       </div>
 
                       <div className="w-16 text-right flex-shrink-0">
@@ -307,10 +329,10 @@ export default function POSSection({
             </div>
 
             {/* Calculations and payment */}
-            <div className="p-4 md:p-5 border-t border-slate-100 bg-slate-50/80 font-sans mt-auto">
+            <div className="p-4 md:p-5 border-t border-slate-200/60 bg-slate-50/80 font-sans mt-auto">
               <div className="space-y-2.5 text-xs md:text-sm mb-4">
                 <div className="flex justify-between text-slate-600 font-medium">
-                  <span className="font-khmer font-bold">សរុបរង (Subtotal)៖</span>
+                  <span className="font-khmer font-bold">សរុបរង៖</span>
                   <span className="font-bold text-slate-800 block">${cartSubtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-slate-600 items-center font-medium">
@@ -325,7 +347,7 @@ export default function POSSection({
                   />
                 </div>
                 <div className="flex justify-between text-blue-900 font-black text-sm md:text-base pt-3 border-t border-slate-200">
-                  <span className="font-khmer font-medium text-slate-800">សរុបចុងក្រោយ (Net Total)៖</span>
+                  <span className="font-khmer font-medium text-slate-800">សរុបចុងក្រោយ៖</span>
                   <span className="text-blue-600 font-black">${netTotal.toFixed(2)}</span>
                 </div>
               </div>
@@ -388,7 +410,7 @@ export default function POSSection({
                       className="w-24 md:w-28 px-3 py-2 text-right bg-slate-50 border border-slate-200 rounded-xl text-xs md:text-sm font-black text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 transition"
                     />
                   </div>
-                  <div className="flex justify-between items-center text-xs md:text-sm pt-2 border-t border-slate-100">
+                  <div className="flex justify-between items-center text-xs md:text-sm pt-2 border-t border-slate-200/60">
                     <span className="text-slate-500 font-bold font-khmer">ប្រាក់អាប់ជូនវិញ៖</span>
                     <span
                       className={`font-black text-sm block ${
@@ -414,10 +436,10 @@ export default function POSSection({
                 type="button"
                 onClick={handleCheckoutClick}
                 disabled={cart.length === 0}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-blue-600/30 transition-all transform active:scale-95 flex justify-center items-center gap-2 text-xs md:text-sm"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-2xl shadow-sm shadow-sm transition-all transform active:scale-95 flex justify-center items-center gap-2 text-xs md:text-sm"
               >
                 <FileSpreadsheet className="w-4.5 h-4.5" />
-                <span>បង់ប្រាក់ និងចេញវិក្កយបត្រ (Checkout)</span>
+                <span>ទូទាត់ប្រាក់</span>
               </button>
             </div>
           </div>

@@ -39,8 +39,8 @@ export default function InventorySection({
   return (
     <section id="sec-inventory" className="flex flex-col gap-4 md:gap-6 w-full font-khmer">
       {/* Top Toolbar */}
-      <div className="bg-white p-5 md:p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
-        <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-full opacity-50 pointer-events-none"></div>
+      <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+        <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-white rounded-full opacity-50 pointer-events-none"></div>
         
 
         <div className="flex flex-row gap-2 md:gap-3 w-full items-center z-10">
@@ -57,7 +57,7 @@ export default function InventorySection({
           <button
             type="button"
             onClick={() => onOpenProductForm()}
-            className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 md:py-2.5 px-3 md:px-5 rounded-2xl text-[11px] md:text-sm shadow-md shadow-blue-600/20 transition-all flex items-center justify-center gap-1.5 md:gap-2 active:scale-95"
+            className="shrink-0 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 md:py-2.5 px-3 md:px-5 rounded-2xl text-[11px] md:text-sm shadow-sm shadow-sm transition-all flex items-center justify-center gap-1.5 md:gap-2 active:scale-95"
           >
             <Plus className="w-4 h-4 md:w-4.5 md:h-4.5" />
             <span className="whitespace-nowrap">បន្ថែមទំនិញ</span>
@@ -66,7 +66,7 @@ export default function InventorySection({
       </div>
 
       {/* Main Container - The List */}
-      <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden w-full">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden w-full">
         <div className="overflow-x-hidden">
           <table className="w-full text-left text-sm text-slate-600 table-fixed">
             <colgroup>
@@ -148,9 +148,9 @@ export default function InventorySection({
             className="absolute inset-0"
             onClick={() => setSelectedProduct(null)}
           ></div>
-          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-sm relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/60 w-full max-w-sm relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex justify-between items-center p-5 border-b border-slate-200/60 bg-slate-50/50">
               <h3 className="font-black text-slate-800 text-lg">ព័ត៌មានទំនិញ</h3>
               <button
                 onClick={() => setSelectedProduct(null)}
@@ -163,7 +163,7 @@ export default function InventorySection({
             {/* Modal Content - Product Details */}
             <div className="p-5 flex flex-col gap-4">
               <div className="flex gap-4 items-center">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center relative shadow-inner">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center relative shadow-sm">
                   {selectedProduct.image ? (
                     <img
                       src={selectedProduct.image}
@@ -182,21 +182,21 @@ export default function InventorySection({
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-2">
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
                   <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">តម្លៃលក់</span>
                   <span className="font-black text-blue-600 font-sans text-base">${selectedProduct.price.toFixed(2)}</span>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
                   <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">បរិមាណ (ស្តុក)</span>
                   <span className={`font-black font-sans text-base ${selectedProduct.stock <= 5 ? 'text-rose-600' : 'text-emerald-600'}`}>
                     {selectedProduct.stock}
                   </span>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
                   <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">តម្លៃដើម</span>
                   <span className="font-bold text-slate-600 font-sans text-base">${selectedProduct.cost.toFixed(2)}</span>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-100">
+                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
                   <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">ក្រុម</span>
                   <span className="font-bold text-slate-600 text-sm">
                     {selectedProduct.category}
@@ -206,7 +206,7 @@ export default function InventorySection({
             </div>
 
             {/* Modal Actions */}
-            <div className="p-5 border-t border-slate-100 flex gap-2">
+            <div className="p-5 border-t border-slate-200/60 flex gap-2">
               <button
                 onClick={() => handleAction('restock', selectedProduct)}
                 className="flex-1 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl text-sm font-bold transition active:scale-95 flex items-center justify-center gap-2"

@@ -26,7 +26,7 @@ export default function Header({
   userRole,
 }: HeaderProps) {
   return (
-    <header className="bg-gradient-to-r from-blue-700 to-indigo-800 text-white px-4 py-2.5 h-[65px] flex items-center shrink-0 relative z-0 shadow-lg md:shadow-md">
+    <header className="bg-white border-b border-slate-200 text-slate-800 px-4 py-2.5 h-[65px] flex items-center shrink-0 relative z-0">
       <div className="flex justify-between items-center max-w-7xl mx-auto w-full">
         {/* Left: App Identity */}
         <div
@@ -34,23 +34,23 @@ export default function Header({
           className="flex items-center space-x-2.5 md:space-x-3 cursor-pointer group"
           id="header-profile-trigger"
         >
-          <div className="relative transition duration-200 group-hover:ring-4 group-hover:ring-white/20 rounded-full active:scale-95">
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center border-2 border-white/30 text-xl font-bold overflow-hidden shadow-sm">
+          <div className="relative transition duration-200 group-hover:ring-4 group-hover:ring-slate-100 rounded-full active:scale-95">
+            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 text-xl font-bold overflow-hidden">
               {user && user.photoURL ? (
                 <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
               ) : (
-                <User className="w-5 h-5 text-white" />
+                <User className="w-5 h-5 text-slate-500" />
               )}
             </div>
             <span
               id="header-online-status"
-              className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-indigo-800 rounded-full ${
+              className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${
                 user ? 'bg-emerald-400' : 'bg-amber-400'
               }`}
             ></span>
           </div>
           <div>
-            <h4 className="text-[10px] md:text-xs text-blue-100 font-medium opacity-90 leading-tight">
+            <h4 className="text-[10px] md:text-xs text-slate-500 font-medium leading-tight">
               {user ? `សួស្តី, ${user.displayName || 'ម្ចាស់ហាង'}` : 'សួស្តី, ភ្ញៀវ!'}
             </h4>
             <h1 className="text-sm md:text-base font-bold tracking-wide line-clamp-1 leading-tight">
@@ -65,9 +65,9 @@ export default function Header({
           <button
             type="button"
             onClick={onOpenDonate}
-            className="md:hidden bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30 px-3 py-1.5 rounded-xl text-[10px] font-bold text-emerald-100 flex items-center space-x-1.5 backdrop-blur-sm transition active:scale-95 shadow-sm"
+            className="md:hidden bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl text-[10px] font-bold text-emerald-600 flex items-center space-x-1.5 backdrop-blur-sm transition active:scale-95 shadow-sm"
           >
-            <Coffee className="w-3.5 h-3.5 text-emerald-300" />
+            <Coffee className="w-3.5 h-3.5 text-emerald-600" />
             <span>ឧបត្ថម្ភ</span>
           </button>
         </div>

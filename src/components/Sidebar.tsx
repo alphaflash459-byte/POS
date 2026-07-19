@@ -52,7 +52,7 @@ export default function Sidebar({
       { id: "inventory", label: "ស្តុក", icon: Boxes },
       {
         id: "sheets",
-        label: "Ledger",
+        label: "កំណត់ត្រា",
         icon: FileSpreadsheet,
         hasDot: !!sheetsWebhookUrl,
       },
@@ -73,7 +73,7 @@ export default function Sidebar({
             id="sidebar-shop-name"
           >
             {userRole === "admin"
-              ? "ប្រព័ន្ធគ្រប់គ្រង (Admin)"
+              ? "ប្រព័ន្ធគ្រប់គ្រង"
               : shopSettings.name}
           </h1>
           <span
@@ -81,8 +81,8 @@ export default function Sidebar({
             id="sidebar-shop-subtitle"
           >
             {userRole === "admin"
-              ? "Admin Dashboard"
-              : shopSettings.subtitle || "POS SYSTEM"}
+              ? "អ្នកគ្រប់គ្រង"
+              : shopSettings.subtitle || "ប្រព័ន្ធលក់ទំនិញ"}
           </span>
         </div>
       </div>

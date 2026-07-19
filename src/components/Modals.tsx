@@ -134,7 +134,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
         {/* Title */}
         <div className="flex justify-between items-center pb-4 shrink-0 border-b border-slate-100 mb-4">
           <h3 className="text-lg md:text-xl font-black text-slate-800">
-            {product ? 'កែប្រែព័ត៌មានទំនិញ (Edit Item)' : 'បន្ថែមទំនិញថ្មី (Add New Item)'}
+            {product ? 'កែប្រែទំនិញ' : 'បន្ថែមទំនិញថ្មី'}
           </h3>
           <button
             type="button"
@@ -150,7 +150,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
           <form id="product-form" onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                ឈ្មោះទំនិញ (Item Name) <span className="text-rose-500">*</span>
+                ឈ្មោះទំនិញ <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -165,7 +165,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
             {/* Image Pick */}
             <div className="space-y-1.5">
               <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                រូបភាពទំនិញ (Image Asset)
+                រូបភាពទំនិញ
               </label>
               <div className="flex gap-4 items-center bg-slate-50 p-3 rounded-2xl border border-slate-200 border-dashed">
                 <div className="w-16 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm relative">
@@ -200,7 +200,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                  លេខកូដ / SKU
+                  លេខកូដ
                 </label>
                 <input
                   type="text"
@@ -246,7 +246,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                  ចំនួនស្តុក (In Stock) <span className="text-rose-500">*</span>
+                  ចំនួនស្តុក <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -269,14 +269,14 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
             onClick={onClose}
             className="w-1/3 hover:bg-slate-200 bg-slate-100 text-slate-700 font-bold text-xs md:text-sm py-3.5 md:py-4 rounded-2xl active:bg-slate-200 transition"
           >
-            បោះបង់ (Cancel)
+            បោះបង់
           </button>
           <button
             type="submit"
             form="product-form"
             className="flex-1 hover:bg-blue-700 bg-blue-600 text-white font-bold text-xs md:text-sm py-3.5 md:py-4 rounded-2xl shadow-lg shadow-blue-600/30 active:scale-95 transition"
           >
-            រក្សាទុកទំនិញ (Save Item)
+            រក្សាទុក
           </button>
         </div>
       </div>
@@ -325,7 +325,7 @@ export function RestockModal({ isOpen, product, onClose, onSave }: RestockModalP
         <div className="flex justify-between items-center pb-4 border-b border-slate-100 mb-4">
           <h3 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
             <Boxes className="w-5 h-5 text-emerald-500" />
-            <span>បញ្ចូលស្តុកបន្ថែម (Restock Item)</span>
+            <span>បន្ថែមស្តុក</span>
           </h3>
           <button
             type="button"
@@ -367,7 +367,7 @@ export function RestockModal({ isOpen, product, onClose, onSave }: RestockModalP
 
           <div className="space-y-1.5">
             <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-              ចំនួនបន្ថែមចូលស្តុក (Quantity) <span className="text-rose-500">*</span>
+              ចំនួន <span className="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -384,7 +384,7 @@ export function RestockModal({ isOpen, product, onClose, onSave }: RestockModalP
 
           <div className="space-y-1.5">
             <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-              មូលហេតុបញ្ជាក់ (Memo Note)
+              ចំណាំ
             </label>
             <input
               type="text"
@@ -409,7 +409,7 @@ export function RestockModal({ isOpen, product, onClose, onSave }: RestockModalP
             onClick={handleExecute}
             className="flex-1 hover:bg-emerald-600 bg-emerald-500 text-white font-bold text-xs md:text-sm py-3.5 md:py-4 rounded-2xl shadow-lg shadow-emerald-500/30 active:scale-95 transition"
           >
-            បញ្ជាក់ការបញ្ចូល (Save)
+            រក្សាទុក
           </button>
         </div>
       </div>
@@ -499,7 +499,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
         <div className="flex justify-between items-center pb-4 border-b border-slate-100 shrink-0 mb-4">
           <h3 className="text-lg md:text-xl font-black text-slate-800 flex items-center gap-2">
             <QrCode className="w-5 h-5 text-blue-600" />
-            <span>ការកំណត់ហាង (Shop Profile Tools)</span>
+            <span>ការកំណត់ហាង</span>
           </h3>
           <button
             type="button"
@@ -514,7 +514,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
           <form id="shop-settings-form" onSubmit={handleFormSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                ឈ្មោះហាង (Shop Name) <span className="text-rose-500">*</span>
+                ឈ្មោះហាង <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -526,7 +526,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                អក្សររត់ពីក្រោម (Subtitle Header)
+                ពាក្យស្លោក
               </label>
               <input
                 type="text"
@@ -538,7 +538,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                  លេខទូរស័ព្ទ (Store Contact)
+                  លេខទូរស័ព្ទ
                 </label>
                 <input
                   type="text"
@@ -549,7 +549,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider">
-                  អាសយដ្ឋាន (Store Location)
+                  អាសយដ្ឋាន
                 </label>
                 <input
                   type="text"
@@ -562,7 +562,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
 
             <div className="space-y-1.5">
               <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider mt-1 block">
-                រូបភាព QR Code (ABA/K-KHQR Scanner asset)
+                រូបភាព QR Code
               </label>
               <div className="flex gap-4 items-center bg-slate-50 p-3 rounded-2xl border border-slate-200 border-dashed">
                 <div className="w-16 h-16 rounded-xl border border-slate-200 bg-white flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm p-1">
@@ -636,9 +636,9 @@ export function DonateModal({ isOpen, onClose }: DonateModalProps) {
             <Coffee className="w-7 h-7 text-emerald-700 animate-bounce" />
           </div>
 
-          <h3 className="text-lg md:text-xl font-black text-slate-800 mb-1">ឧបត្ថម្ភការអភិវឌ្ឍន៍ (Support Dev)</h3>
+          <h3 className="text-lg md:text-xl font-black text-slate-800 mb-1">ឧបត្ថម្ភការអភិវឌ្ឍន៍</h3>
           <p className="text-xs md:text-sm text-slate-500 font-medium leading-relaxed mb-4 md:mb-6 px-2">
-            ការឧបត្ថម្ភទិញកាហ្វេរបស់អ្នក គឺជាកម្លាំងចិត្តដ៏ធំធេងក្នុងការបន្តធ្វើបច្ចុប្បន្នភាព និងថែទាំប្រព័ន្ធលក់ទំនិញនេះឲ្យកាន់តែល្អប្រសើរ!
+            ការឧបត្ថម្ភរបស់អ្នកជួយឱ្យប្រព័ន្ធនេះកាន់តែប្រសើរ!
           </p>
 
           <div className="bg-slate-50 p-2 md:p-3 rounded-2xl md:rounded-3xl border-2 border-dashed border-emerald-200 inline-block mb-2 md:mb-4 shadow-sm">
@@ -653,7 +653,7 @@ export function DonateModal({ isOpen, onClose }: DonateModalProps) {
           </div>
 
           <div className="text-[10px] md:text-xs font-bold text-slate-400 mb-5 md:mb-6 tracking-widest uppercase font-sans">
-            Scan QR with ABA or any Banking App
+            ស្កេន QR តាមរយៈកម្មវិធីធនាគារ
           </div>
 
           <button
@@ -661,7 +661,7 @@ export function DonateModal({ isOpen, onClose }: DonateModalProps) {
             onClick={onClose}
             className="w-full hover:bg-slate-700 bg-slate-800 text-white font-bold text-sm md:text-base py-3.5 md:py-4 rounded-xl md:rounded-2xl shadow-md active:scale-95 transition"
           >
-            បិទផ្ទាំងនេះ (Close Support)
+            បិទ
           </button>
         </div>
       </div>
@@ -691,7 +691,7 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
         <div className="flex justify-between items-center p-4 md:p-5 border-b border-slate-100 bg-slate-50 shrink-0">
           <h3 className="text-base md:text-lg font-black text-slate-800 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
-            <span>វិក្កយបត្រ (Invoice Slip)</span>
+            <span>វិក្កយបត្រ</span>
           </h3>
           <div className="flex space-x-2">
             <button
@@ -746,7 +746,7 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
 
           <div className="text-center mb-4">
             <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest bg-slate-100 inline-block px-3 py-1 rounded-full">
-              វិក្កយបត្រលក់ (Order Receipt)
+              វិក្កយបត្រ
             </h3>
             <p className="text-[11px] font-bold text-slate-500 mt-1.5 font-sans">
               {txn.id}
@@ -778,7 +778,7 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
                 <th className="pb-2 font-khmer">ទំនិញ (Item)</th>
                 <th className="pb-2 text-center">ចំនួន (Qty)</th>
                 <th className="pb-2 text-right">តម្លៃ (Price)</th>
-                <th className="pb-2 text-right">សរុប (Total)</th>
+                <th className="pb-2 text-right">សរុប</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
@@ -798,23 +798,23 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
           {/* Totals Summary */}
           <div className="border-t border-slate-300 pt-3 space-y-1.5 text-[10px] md:text-xs">
             <div className="flex justify-between text-slate-600 font-bold font-sans">
-              <span className="font-khmer">សរុបរង (Subtotal)៖</span>
+              <span className="font-khmer">សរុបរង៖</span>
               <span className="font-black text-slate-800">${txn.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-slate-600 font-bold font-sans">
-              <span className="font-khmer font-bold">បញ្ចុះតម្លៃ (Discount)៖</span>
+              <span className="font-khmer font-bold">បញ្ចុះតម្លៃ៖</span>
               <span className="font-black text-rose-500">{txn.discount}%</span>
             </div>
             <div className="flex justify-between items-center border-t-2 border-slate-800 pt-2 mt-2 pb-2 border-b border-dashed border-slate-300 font-sans">
               <span className="font-black text-[11px] md:text-sm text-slate-900 font-khmer">
-                សរុបចុងក្រោយ (NET TOTAL)៖
+                សរុបចុងក្រោយ៖
               </span>
               <span className="font-black text-sm md:text-lg text-slate-900">
                 ${txn.netTotal.toFixed(2)}
               </span>
             </div>
             <div className="flex justify-between text-[9px] md:text-[10px] text-slate-500 font-bold font-sans">
-              <span className="font-khmer">គិតជាប្រាក់រៀល (KHR)៖</span>
+              <span className="font-khmer">ប្រាក់រៀល៖</span>
               <span className="font-black text-slate-700">
                 {Math.round(txn.netTotal * EXCHANGE_RATE).toLocaleString()} ៛
               </span>
@@ -825,11 +825,11 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
           {txn.paymentMethod === 'CASH' ? (
             <div className="mt-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100 font-sans">
               <div className="flex justify-between text-[10px] md:text-xs font-bold text-slate-600 mb-1">
-                <span className="font-khmer">ប្រាក់ទទួលបាន (Received)៖</span>
+                <span className="font-khmer">ប្រាក់ទទួល៖</span>
                 <span className="text-slate-800 font-black">${txn.cashReceived.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-[10px] md:text-xs font-bold text-slate-600">
-                <span className="font-khmer">ប្រាក់អាប់ជូនវិញ (Change)៖</span>
+                <span className="font-khmer">ប្រាក់អាប់៖</span>
                 <span className="text-slate-800 font-black">
                   ${txn.changeDollar.toFixed(2)} / {txn.changeRiel.toLocaleString()} ៛
                 </span>
@@ -839,7 +839,7 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
             shopSettings.qrImage && (
               <div className="mt-4 flex flex-col items-center justify-center animate-fadeIn">
                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-sans">
-                  ទូទាត់រហ័សតាម QR Scan (Scan to Pay)
+                  ទូទាត់តាម QR Code
                 </p>
                 <div className="w-24 h-24 p-1.5 border-2 border-dashed border-slate-300 rounded-xl bg-white flex items-center justify-center">
                   <img
@@ -881,8 +881,8 @@ export function ConfirmationModal({
   isOpen,
   title,
   message,
-  confirmLabel = 'លុបចេញ (Delete)',
-  cancelLabel = 'បោះបង់ (Cancel)',
+  confirmLabel = 'លុប',
+  cancelLabel = 'បោះបង់',
   type = 'danger',
   onConfirm,
   onClose,
