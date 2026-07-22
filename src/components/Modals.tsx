@@ -706,13 +706,6 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
           </h3>
           <div className="flex space-x-2">
             <button
-              onClick={onDownloadPDF}
-              className="p-2 px-3 hover:bg-blue-100 text-blue-700 font-bold text-xs md:text-sm bg-blue-50 rounded-xl transition active:scale-95 flex items-center gap-1.5 border border-blue-100"
-            >
-              <FileDown className="w-4 h-4" />
-              <span>វិក្កយបត្រ PDF</span>
-            </button>
-            <button
               onClick={handlePrint}
               className="p-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 font-bold rounded-xl text-slate-600 transition active:scale-95 flex items-center gap-1"
             >
@@ -726,18 +719,6 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
             </button>
           </div>
         </div>
-
-        {isIframe && (
-          <div className="bg-amber-50 border-b border-amber-100 p-3 md:p-4 text-[11px] md:text-xs text-amber-800 flex items-start gap-2 shrink-0 print-hidden">
-            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold mb-0.5 text-amber-900">ព័ត៌មានសម្រាប់ការបោះពុម្ព (Print Info)</p>
-              <p className="leading-relaxed opacity-95">
-                ដោយសារកម្មវិធីកំពុងដំណើរការក្នុង iFrame Preview, មុខងារបោះពុម្ពផ្ទាល់ (Direct Print) អាចនឹងត្រូវបានរារាំងដោយកម្មវិធីរុករក (Browser)។ សូមចុចលើប៊ូតុង <span className="font-bold text-amber-950">"បើកក្នុងផ្ទាំងថ្មី" (Open in New Tab)</span> នៅផ្នែកខាងលើនៃអេក្រង់ ដើម្បីប្រើប្រាស់មុខងារបោះពុម្ព ឬទាញយកជា PDF ជំនួសវិញ។
-              </p>
-            </div>
-          </div>
-        )}
 
         {/* Invoice Printable view sheet */}
         <div
