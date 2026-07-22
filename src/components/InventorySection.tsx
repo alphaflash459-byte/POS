@@ -148,85 +148,84 @@ export default function InventorySection({
             className="absolute inset-0"
             onClick={() => setSelectedProduct(null)}
           ></div>
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200/60 w-full max-w-sm relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-5 border-b border-slate-200/60 bg-slate-50/50">
-              <h3 className="font-black text-slate-800 text-lg">ព័ត៌មានទំនិញ</h3>
-              <button
-                onClick={() => setSelectedProduct(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 rounded-full transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="bg-white rounded-[32px] shadow-2xl border border-slate-100 w-full max-w-sm relative z-10 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedProduct(null)}
+              className="absolute top-4 right-4 z-20 p-2.5 bg-slate-100/80 hover:bg-slate-200 backdrop-blur-md rounded-full text-slate-500 hover:text-slate-800 transition active:scale-95"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Hero Image Section */}
+            <div className="relative pt-8 pb-6 px-6 bg-slate-50/50 flex flex-col items-center border-b border-slate-100">
+              <div className="w-28 h-28 md:w-32 md:h-32 rounded-[24px] overflow-hidden border-4 border-white bg-slate-100 shadow-sm mb-4 relative">
+                {selectedProduct.image ? (
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <Eye className="w-8 h-8 text-slate-300 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                )}
+              </div>
+              <h3 className="font-black text-slate-800 text-xl md:text-2xl text-center leading-tight mb-2 px-2 line-clamp-2">
+                {selectedProduct.name}
+              </h3>
+              <span className="inline-flex items-center justify-center px-3 py-1 bg-slate-200/50 text-slate-500 rounded-xl text-xs font-bold font-mono tracking-wide">
+                {selectedProduct.sku}
+              </span>
             </div>
 
-            {/* Modal Content - Product Details */}
-            <div className="p-5 flex flex-col gap-4">
-              <div className="flex gap-4 items-center">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center relative shadow-sm">
-                  {selectedProduct.image ? (
-                    <img
-                      src={selectedProduct.image}
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <Eye className="w-6 h-6 text-slate-300" />
-                  )}
+            {/* Details Grid */}
+            <div className="px-5 py-5">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col bg-slate-50 border border-slate-100 p-4 rounded-[20px]">
+                  <span className="text-[11px] font-bold text-slate-400 font-khmer uppercase tracking-wider mb-1">តម្លៃលក់</span>
+                  <span className="font-black text-blue-600 font-sans text-xl md:text-2xl">${selectedProduct.price.toFixed(2)}</span>
                 </div>
-                <div className="flex flex-col">
-                  <h4 className="font-bold text-slate-800 text-lg leading-tight">{selectedProduct.name}</h4>
-                  <span className="text-sm font-bold font-mono text-slate-500 mt-1">{selectedProduct.sku}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
-                  <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">តម្លៃលក់</span>
-                  <span className="font-black text-blue-600 font-sans text-base">${selectedProduct.price.toFixed(2)}</span>
-                </div>
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
-                  <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">បរិមាណ (ស្តុក)</span>
-                  <span className={`font-black font-sans text-base ${selectedProduct.stock <= 5 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                    {selectedProduct.stock}
+                <div className="flex flex-col bg-slate-50 border border-slate-100 p-4 rounded-[20px]">
+                  <span className="text-[11px] font-bold text-slate-400 font-khmer uppercase tracking-wider mb-1">បរិមាណ (ស្តុក)</span>
+                  <span className={`font-black font-sans text-xl md:text-2xl ${selectedProduct.stock <= 5 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                    {selectedProduct.stock} <span className="text-sm font-medium opacity-70 font-khmer">ឯកតា</span>
                   </span>
                 </div>
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
-                  <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">តម្លៃដើម</span>
-                  <span className="font-bold text-slate-600 font-sans text-base">${selectedProduct.cost.toFixed(2)}</span>
-                </div>
-                <div className="bg-slate-50 rounded-2xl p-3 border border-slate-200/60">
-                  <span className="block text-[10px] text-slate-400 font-bold uppercase mb-1">ក្រុម</span>
-                  <span className="font-bold text-slate-600 text-sm">
+                
+                <div className="flex flex-col bg-slate-50 border border-slate-100 p-4 rounded-[20px] col-span-2 flex-row items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-400 font-khmer uppercase tracking-wider">ប្រភេទទំនិញ</span>
+                  <span className="font-bold text-slate-700 text-sm py-1.5 px-4 bg-white border border-slate-200 shadow-sm rounded-xl inline-flex w-max font-khmer">
                     {selectedProduct.category}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="p-5 border-t border-slate-200/60 flex gap-2">
-              <button
-                onClick={() => handleAction('restock', selectedProduct)}
-                className="flex-1 py-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-2xl text-sm font-bold transition active:scale-95 flex items-center justify-center gap-2"
-              >
-                <Plus className="w-4.5 h-4.5" />
-                <span>+ស្តុក</span>
-              </button>
-              <button
-                onClick={() => handleAction('edit', selectedProduct)}
-                className="flex-1 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-2xl text-sm font-bold transition active:scale-95 flex items-center justify-center gap-2"
-              >
-                <Edit3 className="w-4.5 h-4.5" />
-                <span>កែប្រែ</span>
-              </button>
-              <button
-                onClick={() => handleAction('delete', selectedProduct)}
-                className="px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl transition active:scale-95 flex items-center justify-center"
-              >
-                <Trash2 className="w-4.5 h-4.5" />
-              </button>
+            {/* Actions */}
+            <div className="px-5 pb-5">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleAction('restock', selectedProduct)}
+                  className="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl text-sm font-bold transition shadow-sm active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-5 h-5" />
+                  <span>បន្ថែមស្តុក</span>
+                </button>
+                <button
+                  onClick={() => handleAction('edit', selectedProduct)}
+                  className="flex-1 py-3.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-2xl text-sm font-bold transition active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <Edit3 className="w-4.5 h-4.5" />
+                  <span>កែប្រែ</span>
+                </button>
+                <button
+                  onClick={() => handleAction('delete', selectedProduct)}
+                  className="p-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-2xl transition active:scale-95 flex items-center justify-center"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -188,7 +188,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
                     onClick={() => document.getElementById('prod-image-file-input')?.click()}
                     className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-4 border border-slate-200 rounded-xl text-xs md:text-sm transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
                   >
-                    <Upload className="w-4 h-4 text-blue-600" /> Upload Image
+                    <Upload className="w-4 h-4 text-blue-600" /> បញ្ចូលរូបភាព
                   </button>
                   <p className="text-[10px] text-slate-400 mt-1.5 truncate max-w-[200px] font-medium font-sans">
                     {image ? 'បានរៀបចំរូបភាពរួចរាល់' : 'គាំទ្ររាល់ទម្រង់ជាប្រភេទ PNG, JPG'}
@@ -212,18 +212,18 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
               </div>
               <div className="space-y-1.5">
                 <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider font-sans">
-                  Category
+                  ប្រភេទទំនិញ
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 md:py-3.5 text-xs md:text-sm focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-100 transition outline-none font-bold text-slate-800 appearance-none"
                 >
-                  <option value="ភេសជ្ជៈ">ភេសជ្ជៈ (Drink)</option>
-                  <option value="អាហារ">អាហារ (Food)</option>
-                  <option value="នំចម្រុះ">នំចម្រុះ (Snack)</option>
-                  <option value="គ្រឿងទេស">គ្រឿងទេស (Groceries)</option>
-                  <option value="ទូទៅ">ទូទៅ (Other)</option>
+                  <option value="ភេសជ្ជៈ">ភេសជ្ជៈ</option>
+                  <option value="អាហារ">អាហារ</option>
+                  <option value="នំចម្រុះ">នំចម្រុះ</option>
+                  <option value="គ្រឿងទេស">គ្រឿងទេស</option>
+                  <option value="ទូទៅ">ទូទៅ</option>
                 </select>
               </div>
             </div>
@@ -231,7 +231,7 @@ export function ProductModal({ isOpen, product, onClose, onSave }: ProductModalP
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="text-[11px] md:text-xs font-bold text-slate-500 px-1 uppercase tracking-wider font-sans">
-                  Retail Price ($) <span className="text-rose-500">*</span>
+                  តម្លៃលក់ ($) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -347,7 +347,7 @@ export function RestockModal({ isOpen, product, onClose, onSave }: RestockModalP
             </div>
             <div>
               <span className="block text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5 font-sans">
-                Item Name
+                ឈ្មោះទំនិញ
               </span>
               <p className="font-black text-slate-800 text-sm md:text-base leading-tight">
                 {product.name}
@@ -585,7 +585,7 @@ export function ShopSettingsModal({ isOpen, settings, onClose, onSave }: ShopSet
                     onClick={() => document.getElementById('setting-qr-image-input')?.click()}
                     className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-4 border border-slate-200 rounded-xl text-xs md:text-sm transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95"
                   >
-                    <QrCode className="w-4 h-4 text-indigo-600" /> Upload QR Block
+                    <QrCode className="w-4 h-4 text-indigo-600" /> បញ្ចូលរូប QR
                   </button>
                 </div>
               </div>
@@ -684,11 +684,22 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
   if (!isOpen || !txn) return null;
 
   const totalQty = txn.items.reduce((s, i) => s + i.quantity, 0);
+  const isIframe = window.self !== window.top;
+
+  const handlePrint = () => {
+    try {
+      window.focus();
+      window.print();
+    } catch (err) {
+      console.error("Print failed:", err);
+      alert("មិនអាចបើកផ្ទាំងបោះពុម្ពបានទេ! សូមបើកកម្មវិធីក្នុងផ្ទាំងថ្មី (Open in New Tab) ដើម្បីបោះពុម្ព។");
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex justify-center items-center z-[100] p-4 print-hidden font-khmer">
-      <div className="bg-white w-full max-w-md md:max-w-lg rounded-3xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl relative">
-        <div className="flex justify-between items-center p-4 md:p-5 border-b border-slate-100 bg-slate-50 shrink-0">
+    <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex justify-center items-center z-[100] p-4 font-khmer print-modal-root">
+      <div className="bg-white w-full max-w-md md:max-w-lg rounded-3xl overflow-hidden flex flex-col max-h-[95vh] shadow-2xl relative print-modal-content">
+        <div className="flex justify-between items-center p-4 md:p-5 border-b border-slate-100 bg-slate-50 shrink-0 print-hidden">
           <h3 className="text-base md:text-lg font-black text-slate-800 flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-emerald-500" />
             <span>វិក្កយបត្រ</span>
@@ -702,7 +713,7 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
               <span>វិក្កយបត្រ PDF</span>
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={handlePrint}
               className="p-2 bg-slate-50 border border-slate-200 hover:bg-slate-100 font-bold rounded-xl text-slate-600 transition active:scale-95 flex items-center gap-1"
             >
               <Printer className="w-4.5 h-4.5" />
@@ -715,6 +726,18 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
             </button>
           </div>
         </div>
+
+        {isIframe && (
+          <div className="bg-amber-50 border-b border-amber-100 p-3 md:p-4 text-[11px] md:text-xs text-amber-800 flex items-start gap-2 shrink-0 print-hidden">
+            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold mb-0.5 text-amber-900">ព័ត៌មានសម្រាប់ការបោះពុម្ព (Print Info)</p>
+              <p className="leading-relaxed opacity-95">
+                ដោយសារកម្មវិធីកំពុងដំណើរការក្នុង iFrame Preview, មុខងារបោះពុម្ពផ្ទាល់ (Direct Print) អាចនឹងត្រូវបានរារាំងដោយកម្មវិធីរុករក (Browser)។ សូមចុចលើប៊ូតុង <span className="font-bold text-amber-950">"បើកក្នុងផ្ទាំងថ្មី" (Open in New Tab)</span> នៅផ្នែកខាងលើនៃអេក្រង់ ដើម្បីប្រើប្រាស់មុខងារបោះពុម្ព ឬទាញយកជា PDF ជំនួសវិញ។
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Invoice Printable view sheet */}
         <div
@@ -766,7 +789,7 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
 
               <div className="text-slate-500 font-bold font-khmer">ការទូទាត់៖</div>
               <div className="font-bold text-right text-slate-800 font-khmer">
-                {txn.paymentMethod === 'QR' ? 'QR Core Scan' : 'សាច់ប្រាក់ (Cash)'}
+                {txn.paymentMethod === 'QR' ? 'ស្កេន QR' : 'សាច់ប្រាក់'}
               </div>
             </div>
           </div>
@@ -775,9 +798,9 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
           <table className="w-full text-[10px] md:text-[11px] text-left mb-4 font-sans">
             <thead>
               <tr className="border-b-2 border-slate-800 text-slate-700 font-black uppercase tracking-wider pb-1">
-                <th className="pb-2 font-khmer">ទំនិញ (Item)</th>
-                <th className="pb-2 text-center">ចំនួន (Qty)</th>
-                <th className="pb-2 text-right">តម្លៃ (Price)</th>
+                <th className="pb-2 font-khmer">ទំនិញ</th>
+                <th className="pb-2 text-center">ចំនួន</th>
+                <th className="pb-2 text-right">តម្លៃ</th>
                 <th className="pb-2 text-right">សរុប</th>
               </tr>
             </thead>
@@ -838,10 +861,10 @@ export function InvoiceModal({ isOpen, txn, shopSettings, onClose, onDownloadPDF
           ) : (
             shopSettings.qrImage && (
               <div className="mt-4 flex flex-col items-center justify-center animate-fadeIn">
-                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1.5 font-sans">
+                <p className="text-xs md:text-sm font-bold text-slate-700 uppercase tracking-widest mb-3 font-sans">
                   ទូទាត់តាម QR Code
                 </p>
-                <div className="w-24 h-24 p-1.5 border-2 border-dashed border-slate-300 rounded-xl bg-white flex items-center justify-center">
+                <div className="w-full max-w-[350px] aspect-square mx-auto flex items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl p-2">
                   <img
                     src={shopSettings.qrImage}
                     alt="KHQR Scan block"

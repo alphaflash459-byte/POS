@@ -9,6 +9,8 @@ export interface User {
   password?: string;
   role: string;
   createdAt?: string;
+  subscriptionPlan?: string;
+  subscriptionEnd?: string;
 }
 
 export interface Product {
@@ -70,6 +72,19 @@ export interface ShopSettings {
   address: string;
   phone: string;
   qrImage: string;
+}
+
+export interface SubscriptionRequest {
+  id: string;
+  userId: string;
+  username: string;
+  planId: string;
+  planName: string;
+  price: number;
+  days: number;
+  receiptImage: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
 }
 
 export interface ToastMessage {

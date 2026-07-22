@@ -45,6 +45,7 @@ export default function Sidebar({
       { id: "admin_users", label: "គណនី", icon: Users },
       { id: "admin_history", label: "ប្រវត្តិ", icon: History },
       { id: "admin_report", label: "របាយការណ៍", icon: FileBarChart },
+      { id: "admin_subscriptions", label: "ការជាវ", icon: Receipt },
     ];
   } else {
     navItems = [
@@ -61,7 +62,7 @@ export default function Sidebar({
   }
 
   return (
-    <nav className="absolute md:relative bottom-0 w-full md:w-64 bg-white/95 md:bg-white backdrop-blur-md md:backdrop-blur-none border-t md:border-t-0 md:border-r border-slate-200/50 z-40 shrink-0 md:order-1 transition-all shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] md:shadow-none print-hidden">
+    <nav className="relative mt-auto md:mt-0 w-full md:w-64 bg-white/95 md:bg-white backdrop-blur-md md:backdrop-blur-none border-t md:border-t-0 md:border-r border-slate-200/50 shrink-0 order-2 md:order-1 transition-all shadow-[0_-4px_20px_-10px_rgba(0,0,0,0.1)] md:shadow-none print-hidden">
       {/* Desktop Brand Header */}
       <div className="hidden md:flex items-center space-x-3 p-6 mb-2 border-b border-slate-50">
         <div className="bg-blue-600 text-white p-2.5 rounded-xl shadow-md shadow-blue-600/30 flex items-center justify-center">
@@ -133,14 +134,6 @@ export default function Sidebar({
           >
             <Settings className="w-4 h-4" />
             <span>កំណត់ហាង</span>
-          </button>
-          <button
-            type="button"
-            onClick={onOpenDonate}
-            className="w-full bg-emerald-50 hover:bg-emerald-100 text-emerald-600 border border-emerald-200 p-3 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition active:scale-95 shadow-sm"
-          >
-            <span className="text-sm">☕️</span>
-            <span>ឧបត្ថម្ភការគាំទ្រ</span>
           </button>
         </div>
       )}

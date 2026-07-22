@@ -26,8 +26,8 @@ export default function Header({
   userRole,
 }: HeaderProps) {
   return (
-    <header className="bg-white border-b border-slate-200 text-slate-800 px-4 py-2.5 h-[65px] flex items-center shrink-0 relative z-0">
-      <div className="flex justify-between items-center max-w-7xl mx-auto w-full">
+    <header className="bg-white border-b border-slate-200 text-slate-800 px-2 md:px-4 py-2.5 h-[65px] flex items-center shrink-0 relative z-0">
+      <div className="flex justify-between items-center w-full">
         {/* Left: App Identity */}
         <div
           onClick={onOpenProfile}
@@ -61,15 +61,6 @@ export default function Header({
 
         {/* Right: Controls */}
         <div className="flex flex-col md:flex-row items-end md:items-center space-y-2 md:space-y-0 md:space-x-3">
-          {/* Donate Trigger (Mobile Only) */}
-          <button
-            type="button"
-            onClick={onOpenDonate}
-            className="md:hidden bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl text-[10px] font-bold text-emerald-600 flex items-center space-x-1.5 backdrop-blur-sm transition active:scale-95 shadow-sm"
-          >
-            <Coffee className="w-3.5 h-3.5 text-emerald-600" />
-            <span>ឧបត្ថម្ភ</span>
-          </button>
         </div>
       </div>
     </header>

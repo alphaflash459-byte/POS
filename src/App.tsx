@@ -5,6 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
+import html2canvas from 'html2canvas-pro';
+import { jsPDF } from 'jspdf';
 import {
   CheckCircle2,
   AlertCircle,
@@ -14,8 +16,10 @@ import {
   Coffee,
   Cloud,
   Users,
-  Settings
-, FileSpreadsheet } from 'lucide-react';
+  Settings,
+  FileSpreadsheet,
+  Shield
+} from 'lucide-react';
 import { User } from './types';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from './firebase.ts';
@@ -41,6 +45,8 @@ import {
   InvoiceModal,
   ConfirmationModal
 } from './components/Modals.tsx';
+
+import SubscriptionScreen from './components/SubscriptionScreen.tsx';
 
 export default function App() {
   // Navigation
@@ -245,6 +251,8 @@ export default function App() {
           username: data.displayName || data.username || d.id, 
           password: data.password || '12345678',
           role: data.role || 'user',
+          subscriptionEnd: data.subscriptionEnd,
+          subscriptionPlan: data.subscriptionPlan,
           ...data
         } as User);
       });
@@ -263,13 +271,20 @@ export default function App() {
       } else {
         setUsers(list);
         setIsInitializing(false);
+        // If a user is currently logged in, update their local state too
+        if (activeUserId) {
+          const updatedActiveUser = list.find(u => u.id === activeUserId);
+          if (updatedActiveUser) {
+            setUser(updatedActiveUser);
+          }
+        }
       }
     }, (error) => {
       console.error("Error fetching users", error);
       setIsInitializing(false);
     });
     return () => unsub();
-  }, []);
+  }, [activeUserId]);
 
   // Data Sync Listener based on activeUserId
   useEffect(() => {
@@ -863,29 +878,46 @@ export default function App() {
     showToast('នាំចេញប្រវត្តិការលក់រួចរាល់ ជោគជ័យ!', 'success');
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     const element = document.getElementById('invoice-pdf-template');
     if (!element) return;
-    // @ts-ignore
-    if (typeof html2pdf !== 'undefined') {
-      showToast('កំពុងបង្កើតឯកសារ PDF...', 'info');
-      const opt = {
-        margin: [0.2, 0.2, 0.2, 0.2],
-        filename: `វិក្កយបត្រ-${activeInvoice?.id}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 3, useCORS: true },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      // @ts-ignore
-      html2pdf()
-        .from(element)
-        .set(opt)
-        .save()
-        .then(() => {
-          showToast('ទាញយក PDF ជោគជ័យ!', 'success');
-        });
-    } else {
-      window.print();
+    
+    showToast('កំពុងបង្កើតឯកសារ PDF...', 'info');
+    try {
+      // Temporarily prepare the element for perfect capturing (avoid cutoffs and scrollbars)
+      const originalStyle = element.getAttribute('style') || '';
+      const originalClassName = element.className;
+      
+      element.style.height = 'auto';
+      element.style.maxHeight = 'none';
+      element.style.overflow = 'visible';
+      element.classList.remove('overflow-y-auto');
+      
+      const canvas = await html2canvas(element, {
+        scale: 2, // 2x scale for ultra crisp text and graphics
+        useCORS: true, // Support loaded images/resources
+        backgroundColor: '#ffffff', // Clean white background
+        logging: false,
+      });
+      
+      // Restore original container styling
+      element.setAttribute('style', originalStyle);
+      element.className = originalClassName;
+      
+      const imgData = canvas.toDataURL('image/jpeg', 0.98);
+      const pdf = new jsPDF({ unit: 'in', format: 'letter', orientation: 'portrait' });
+      
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      // Add a small margin of 0.2 inches on each side for professional printable look
+      pdf.addImage(imgData, 'JPEG', 0.2, 0.2, pdfWidth - 0.4, pdfHeight);
+      pdf.save(`វិក្កយបត្រ-${activeInvoice?.id || 'invoice'}.pdf`);
+      showToast('ទាញយក PDF ជោគជ័យ!', 'success');
+    } catch (error: any) {
+      console.error(error);
+      showToast('បរាជ័យក្នុងការបង្កើត PDF!', 'error');
     }
   };
 
@@ -934,8 +966,33 @@ export default function App() {
     );
   }
 
+  const isSubscribed = userRole === 'admin' || (user.subscriptionEnd && new Date(user.subscriptionEnd) > new Date());
+
+  if (!isSubscribed) {
+    return (
+      <SubscriptionScreen 
+        user={user} 
+        onLogout={handleLogout} 
+        onSuccess={() => {
+          showToast('ការផ្ទៀងផ្ទាត់ជោគជ័យ! សូមស្វាគមន៍មកកាន់ប្រព័ន្ធ', 'success');
+          // Reload user data slightly
+          const updatedUsers = [...users];
+          const userIdx = updatedUsers.findIndex(u => u.id === user.id);
+          if (userIdx > -1) {
+            const now = new Date();
+            // Just local update to unblock UI instantly, the realtime listener might be better but App_users listener doesn't update `user` state directly if activeUserId is already set unless we update `user` state.
+            setUser({
+              ...user,
+              subscriptionEnd: new Date(now.setFullYear(now.getFullYear() + 1)).toISOString() // fake local update, actual handled in SubscriptionScreen
+            });
+          }
+        }} 
+      />
+    );
+  }
+
   return (
-    <div className="flex flex-col md:flex-row w-full h-screen font-sans">
+    <div className="fixed inset-0 flex flex-col md:flex-row w-full font-sans bg-white print-app-container">
       {/* Dynamic Toast popup stack */}
       <div className="fixed top-6 md:top-10 left-1/2 transform -translate-x-1/2 z-[150] flex flex-col space-y-2 pointer-events-none w-[90%] max-w-sm md:max-w-md print-hidden">
         {toasts.map((t) => (
@@ -974,7 +1031,7 @@ export default function App() {
       />
 
       {/* Main Container Area */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden bg-[#f1f5f9] md:order-2 relative print-hidden">
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#f1f5f9] order-1 md:order-2 relative z-10 print-hidden">
         <Header
             shopSettings={shopSettings}
             sheetsWebhookUrl={sheetsWebhookUrl}
@@ -986,8 +1043,8 @@ export default function App() {
           />
 
         {/* Content View Overlay */}
-        <main className="flex-1 overflow-y-auto custom-scroll relative z-10 w-full px-4 md:px-8 pb-24 md:pb-8">
-          <div className="max-w-7xl mx-auto w-full pt-4 md:pt-6">
+        <main className="flex-1 overflow-y-auto custom-scroll relative w-full pb-4 md:pb-8">
+          <div className="w-full">
             {/* Show view panels conditionally */}
             {currentTab === 'pos' && (
               <POSSection
@@ -1140,14 +1197,38 @@ export default function App() {
                 </div>
                 
                 <>
-                  <h4 className="text-base md:text-lg font-black text-slate-800 z-10">{user?.displayName || 'ម្ចាស់ហាង'}</h4>
-                  <p className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mt-1.5 mb-2 z-10">
-                    📬 {user?.email}
-                  </p>
-                  <p className="text-[11px] font-bold text-emerald-600 mb-5 z-10">
+                  <h4 className="text-base md:text-lg font-black text-slate-800 z-10">{user?.displayName || user?.username || 'ម្ចាស់ហាង'}</h4>
+                  {user?.email && (
+                    <p className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mt-1.5 mb-2 z-10">
+                      📬 {user.email}
+                    </p>
+                  )}
+                  <p className="text-[11px] font-bold text-emerald-600 mb-4 z-10">
                     ☁️ ទិន្នន័យត្រូវបានរក្សាទុកលើ Cloud
                   </p>
+                  
                   <div className="flex flex-col gap-2 w-full z-10 px-4">
+                    {userRole !== 'admin' && (
+                      <div className="bg-white/80 rounded-2xl p-4 mb-2 text-left border border-blue-100 shadow-sm flex flex-col gap-2 relative overflow-hidden backdrop-blur-md">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-50"></div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                            <Shield className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">ស្ថានភាពសេវាកម្ម</div>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-slate-600">កញ្ចប់សេវាកម្ម៖</span>
+                          <span className="text-sm font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">{user?.subscriptionPlan || 'ឥតគិតថ្លៃ'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-bold text-slate-600">ថ្ងៃផុតកំណត់៖</span>
+                          <span className="text-xs md:text-sm font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100">
+                            {user?.subscriptionEnd ? new Date(user.subscriptionEnd).toLocaleString('km-KH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'មិនទាន់មាន'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {userRole !== 'admin' && (
                       <button
                         type="button"

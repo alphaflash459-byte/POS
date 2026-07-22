@@ -5,7 +5,7 @@
 
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { initializeFirestore } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 
 export const firebaseConfigValue = firebaseConfig;
@@ -13,7 +13,9 @@ export const firebaseConfigValue = firebaseConfig;
 const app = initializeApp(firebaseConfig);
 
 // CRITICAL: The app will break without specifying the firestoreDatabaseId
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+}, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 
 // Secondary app for admin to create users without logging out
