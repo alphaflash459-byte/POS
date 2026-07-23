@@ -25,7 +25,15 @@ interface POSSectionProps {
   shopSettings: ShopSettings;
 }
 
-function CartQtyInput({ item, onSetQty, onRemove }: { item: CartItem, onSetQty: (id: number, qty: number) => void, onRemove: (id: number) => void }) {
+function CartQtyInput({ 
+  item, 
+  onSetQty, 
+  onUpdateQty 
+}: { 
+  item: CartItem; 
+  onSetQty: (id: number, qty: number) => void; 
+  onUpdateQty: (id: number, change: number) => void; 
+}) {
   const [localVal, setLocalVal] = useState<string>(item.quantity.toString());
 
   useEffect(() => {
@@ -34,26 +42,54 @@ function CartQtyInput({ item, onSetQty, onRemove }: { item: CartItem, onSetQty: 
     }
   }, [item.quantity]);
 
+  const handleMinus = () => {
+    if (item.quantity > 1) {
+      onUpdateQty(item.product.id, -1);
+    } else {
+      onUpdateQty(item.product.id, -item.quantity);
+    }
+  };
+
+  const handlePlus = () => {
+    onUpdateQty(item.product.id, 1);
+  };
+
   return (
-    <input
-      type="number"
-      min="1"
-      value={localVal}
-      onChange={(e) => {
-        setLocalVal(e.target.value);
-        const val = parseInt(e.target.value);
-        if (!isNaN(val) && val > 0) {
-          onSetQty(item.product.id, val);
-        }
-      }}
-      onBlur={() => {
-        const val = parseInt(localVal);
-        if (isNaN(val) || val <= 0) {
-          onRemove(item.product.id);
-        }
-      }}
-      className="w-full text-center text-xs font-bold text-slate-800 font-sans bg-slate-50 border border-slate-200/60 p-1.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100"
-    />
+    <div className="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200/40 font-sans w-24">
+      <button
+        type="button"
+        onClick={handleMinus}
+        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 hover:shadow-sm transition active:scale-90"
+      >
+        {item.quantity === 1 ? <Trash2 className="w-3.5 h-3.5 text-rose-500" /> : <Minus className="w-3.5 h-3.5" />}
+      </button>
+      <input
+        type="number"
+        min="1"
+        value={localVal}
+        onChange={(e) => {
+          setLocalVal(e.target.value);
+          const val = parseInt(e.target.value);
+          if (!isNaN(val) && val > 0) {
+            onSetQty(item.product.id, val);
+          }
+        }}
+        onBlur={() => {
+          const val = parseInt(localVal);
+          if (isNaN(val) || val <= 0) {
+            onUpdateQty(item.product.id, -item.quantity);
+          }
+        }}
+        className="w-10 text-center text-xs font-black text-slate-800 bg-transparent focus:outline-none focus:ring-0 p-0 border-0"
+      />
+      <button
+        type="button"
+        onClick={handlePlus}
+        className="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-white text-slate-500 hover:text-slate-800 hover:shadow-sm transition active:scale-90"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
+    </div>
   );
 }
 
@@ -177,49 +213,57 @@ export default function POSSection({
                     <div
                       key={p.id}
                       onClick={() => !isOutOfStock && onAddToCart(p)}
-                      className={`group relative flex flex-col justify-between p-3 rounded-2xl border transition-all duration-200 transform active:scale-[0.96] ${
+                      className={`group relative flex flex-col justify-between p-3.5 rounded-[20px] border transition-all duration-300 transform active:scale-[0.97] ${
                         isOutOfStock
-                          ? 'border-slate-200 bg-slate-50 opacity-65 cursor-not-allowed'
-                          : 'border-slate-200/60 hover:border-blue-400 bg-white shadow-sm hover:shadow-sm cursor-pointer'
+                          ? 'border-slate-200 bg-slate-50/80 opacity-60 cursor-not-allowed'
+                          : 'border-slate-200/60 hover:border-blue-500/30 bg-white shadow-sm hover:shadow-md hover:shadow-blue-500/5 hover:-translate-y-1 cursor-pointer'
                       }`}
                     >
-                      <div className="h-24 sm:h-28 w-full rounded-2xl overflow-hidden mb-3 relative bg-slate-100 shadow-sm">
+                      <div className="h-26 sm:h-30 w-full rounded-[14px] overflow-hidden mb-3 relative bg-slate-50 border border-slate-100 flex-shrink-0">
                         {p.image ? (
                           <img
                             src={p.image}
                             alt={p.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                             referrerPolicy="no-referrer"
                           />
                         ) : (
-                          <div className={`absolute inset-0 ${p.color || 'bg-slate-100 text-slate-800'} flex flex-col justify-center items-center`}>
-                            <Package className="w-6 h-6 opacity-60 mb-1" />
+                          <div className={`absolute inset-0 ${p.color || 'bg-slate-100 text-slate-800'} flex flex-col justify-center items-center opacity-85`}>
+                            <Package className="w-7 h-7 opacity-50 mb-1" />
                           </div>
                         )}
                         {isOutOfStock && (
-                          <div className="absolute inset-0 bg-rose-600/70 backdrop-blur-sm flex items-center justify-center text-white font-bold text-[9px] uppercase tracking-wide">
-                            អស់ពីស្តុក
+                          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center">
+                            <span className="bg-rose-500 text-white font-bold text-[9px] px-2 py-1 rounded-full uppercase tracking-wider shadow-sm">
+                              អស់ពីស្តុក
+                            </span>
                           </div>
                         )}
                       </div>
 
                       <div className="flex-grow">
-                        <h4 className="text-xs font-bold text-slate-800 line-clamp-2 leading-tight mb-1">
+                        <span className="inline-block text-[9px] font-black tracking-wider text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md uppercase mb-1">
+                          {p.category}
+                        </span>
+                        <h4 className="text-xs font-black text-slate-800 line-clamp-2 leading-snug mb-1">
                           {p.name}
                         </h4>
-                        <span className="block text-[9px] text-slate-400 font-bold tracking-wide">
+                        <span className="block text-[9px] text-slate-400 font-bold tracking-wide font-sans">
                           {p.sku || 'N/A'}
                         </span>
                       </div>
 
-                      <div className="flex justify-between items-center mt-3 pt-2 border-t border-slate-200/60 border-dashed font-sans">
+                      <div className="flex justify-between items-center mt-3 pt-2.5 border-t border-slate-100 border-dashed font-sans">
                         <span className="text-sm font-black text-blue-600">${p.price.toFixed(2)}</span>
                         <span
-                          className={`text-[9px] font-bold ${
-                            p.stock <= 5 ? 'text-rose-600 bg-rose-50' : 'text-slate-500 bg-slate-100'
-                          } px-2 py-0.5 rounded-lg`}
+                          className={`text-[9px] font-black ${
+                            p.stock <= 5 
+                              ? 'text-rose-600 bg-rose-50 border border-rose-100' 
+                              : 'text-emerald-700 bg-emerald-50 border border-emerald-100'
+                          } px-2 py-0.5 rounded-lg flex items-center gap-1`}
                         >
-                          📦 {p.stock}
+                          <span className={`w-1.5 h-1.5 rounded-full ${p.stock <= 5 ? 'bg-rose-500' : 'bg-emerald-500'} animate-pulse`}></span>
+                          {p.stock}
                         </span>
                       </div>
                     </div>
@@ -309,11 +353,11 @@ export default function POSSection({
                         </span>
                       </div>
 
-                      <div className="flex items-center flex-shrink-0 w-16">
+                      <div className="flex items-center flex-shrink-0">
                         <CartQtyInput 
                           item={item} 
                           onSetQty={onSetCartQty} 
-                          onRemove={(id) => onUpdateCartQty(id, -item.quantity)} 
+                          onUpdateQty={onUpdateCartQty} 
                         />
                       </div>
 

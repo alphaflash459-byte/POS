@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, getDocs, collectionGroup, query, orderBy, setDoc, doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, getDocs, collectionGroup, query, orderBy, setDoc, doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase.ts';
 import { ShieldAlert, Users, ShoppingCart, Boxes, DollarSign, Activity, LayoutDashboard, History, FileBarChart, Receipt, Check, X } from 'lucide-react';
 import { APP_ID } from '../App.tsx';
@@ -167,7 +167,7 @@ export default function AdminPanel({ activeTab, onSetActiveUser, activeUserId, o
   const handleApproveSubscription = async (req: SubscriptionRequest) => {
     try {
       const userRef = doc(db, 'artifacts', APP_ID, 'app_users', req.userId);
-      const appRef = doc(db, 'artifacts', APP_ID);
+      const reqRef = doc(db, 'artifacts', APP_ID, 'subscription_requests', req.id);
       
       const userSnap = await getDoc(userRef);
       let currentEnd = new Date();
@@ -199,11 +199,9 @@ export default function AdminPanel({ activeTab, onSetActiveUser, activeUserId, o
       }, { merge: true });
 
       // Update request status
-      await setDoc(appRef, {
-        subscription_requests: {
-          [req.id]: { status: 'approved' }
-        }
-      }, { merge: true });
+      await updateDoc(reqRef, {
+        status: 'approved'
+      });
 
       onToast('ការជាវត្រូវបានអនុម័តជោគជ័យ!', 'success');
     } catch (e) {
@@ -214,14 +212,12 @@ export default function AdminPanel({ activeTab, onSetActiveUser, activeUserId, o
 
   const handleRejectSubscription = async (req: SubscriptionRequest) => {
     try {
-      const appRef = doc(db, 'artifacts', APP_ID);
+      const reqRef = doc(db, 'artifacts', APP_ID, 'subscription_requests', req.id);
       
       // Update request status
-      await setDoc(appRef, {
-        subscription_requests: {
-          [req.id]: { status: 'rejected' }
-        }
-      }, { merge: true });
+      await updateDoc(reqRef, {
+        status: 'rejected'
+      });
 
       onToast('ការជាវត្រូវបានបដិសេធជោគជ័យ!', 'success');
     } catch (e) {
@@ -243,14 +239,16 @@ export default function AdminPanel({ activeTab, onSetActiveUser, activeUserId, o
       console.error("Error fetching users", error);
     });
 
-    const docRef = doc(db, 'artifacts', APP_ID);
-    const unsubReqs = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const reqsObj: Record<string, SubscriptionRequest> = data.subscription_requests || {};
-        const reqsArray = Object.values(reqsObj).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setSubscriptionRequests(reqsArray);
-      }
+    const reqsRef = collection(db, 'artifacts', APP_ID, 'subscription_requests');
+    const unsubReqs = onSnapshot(reqsRef, (snapshot) => {
+      const list: SubscriptionRequest[] = [];
+      snapshot.forEach((d) => {
+        list.push({ id: d.id, ...d.data() } as SubscriptionRequest);
+      });
+      const sorted = list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setSubscriptionRequests(sorted);
+    }, (error) => {
+      console.error("Error fetching subscription requests:", error);
     });
 
     return () => {

@@ -3,6 +3,8 @@ import { FileSpreadsheet, Plug, Info, Copy, Check, CloudUpload, FileDown, Downlo
 
 interface GoogleSheetsSetupProps {
   sheetsWebhookUrl: string;
+  isAutoSyncEnabled: boolean;
+  onToggleAutoSync: () => void;
   onSaveSheetsUrl: (url: string) => void;
   onTestSheetsUrl: () => void;
   onManualSync: () => void;
@@ -12,6 +14,8 @@ interface GoogleSheetsSetupProps {
 
 export default function GoogleSheetsSetup({
   sheetsWebhookUrl,
+  isAutoSyncEnabled,
+  onToggleAutoSync,
   onSaveSheetsUrl,
   onTestSheetsUrl,
   onManualSync,
@@ -109,6 +113,28 @@ export default function GoogleSheetsSetup({
         <span className={`text-[10px] md:text-xs font-bold font-khmer ${sheetsWebhookUrl ? 'text-emerald-600' : 'text-slate-500'}`}>
           {sheetsWebhookUrl ? 'បានភ្ជាប់ការតភ្ជាប់ជោគជ័យ (Connected)' : 'មិនទាន់មានការតភ្ជាប់ (Webhook Missing)'}
         </span>
+      </div>
+
+      {/* Auto-Sync Toggle Switch */}
+      <div className="flex items-center justify-between p-3.5 bg-emerald-50/50 rounded-2xl border border-emerald-100/50 mb-4 text-left">
+        <div className="flex flex-col">
+          <span className="text-xs md:text-sm font-black text-slate-800">បញ្ជូនទៅ Google Sheets ស្វ័យប្រវត្តិ</span>
+          <span className="text-[9px] md:text-[10px] text-slate-500 font-bold mt-0.5">រាល់ពេលមានប្រតិបត្តិការលក់ ឬកែប្រែស្តុក</span>
+        </div>
+        <button
+          type="button"
+          onClick={onToggleAutoSync}
+          disabled={!sheetsWebhookUrl}
+          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors focus:outline-none ${
+            isAutoSyncEnabled && sheetsWebhookUrl ? 'bg-emerald-500' : 'bg-slate-300'
+          } ${!sheetsWebhookUrl ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+        >
+          <span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              isAutoSyncEnabled && sheetsWebhookUrl ? 'translate-x-6' : 'translate-x-1'
+            }`}
+          />
+        </button>
       </div>
 
       <div className="flex space-x-3 mb-4">

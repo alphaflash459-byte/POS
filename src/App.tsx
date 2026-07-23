@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
@@ -18,7 +18,12 @@ import {
   Users,
   Settings,
   FileSpreadsheet,
-  Shield
+  Shield,
+  Key,
+  Lock,
+  LogOut,
+  Store,
+  Database
 } from 'lucide-react';
 import { User } from './types';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
@@ -58,6 +63,7 @@ export default function App() {
   const [salesHistory, setSalesHistory] = useState<Transaction[]>([]);
   const [stockLogs, setStockLogs] = useState<StockLog[]>([]);
   const [sheetsWebhookUrl, setSheetsWebhookUrl] = useState('');
+  const [isAutoSyncEnabled, setIsAutoSyncEnabled] = useState(true);
   const [shopSettings, setShopSettings] = useState<ShopSettings>({
     name: 'ហាងលក់ភេសជ្ជៈ',
     subtitle: 'POS SYSTEM',
@@ -86,6 +92,12 @@ export default function App() {
   const [isShopSettingsOpen, setIsShopSettingsOpen] = useState(false);
   const [isDonateOpen, setIsDonateOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileActiveTab, setProfileActiveTab] = useState<'profile' | 'shop' | 'sync'>('profile');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [activeInvoice, setActiveInvoice] = useState<Transaction | null>(null);
 
   // Confirmation Alert Dialogs Context
@@ -180,11 +192,11 @@ export default function App() {
     }
   };
 
-  const saveWebappUrlToFirestore = async (url: string) => {
+  const saveWebappUrlToFirestore = async (url: string, autoSync: boolean) => {
     if (!user) return;
     try {
       const docRef = doc(db, 'artifacts', APP_ID, 'users', user.id, 'settings', 'config');
-      await setDoc(docRef, { sheetsWebhookUrl: url });
+      await setDoc(docRef, { sheetsWebhookUrl: url, isAutoSyncEnabled: autoSync });
     } catch (e) {
       handleFirestoreError(e, OperationType.WRITE, `settings/${user.id}/config`);
     }
@@ -235,6 +247,49 @@ export default function App() {
     } catch (e) {
       console.error(e);
       showToast('បរាជ័យក្នុងការបង្កើតគណនី!', 'error');
+    }
+  };
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      showToast('មិនទាន់បានចូលគណនី!', 'error');
+      return;
+    }
+    
+    // Check if current password matches
+    if (currentPassword !== user.password) {
+      showToast('លេខសម្ងាត់បច្ចុប្បន្នមិនត្រឹមត្រូវទេ!', 'error');
+      return;
+    }
+
+    if (newPassword.length < 4) {
+      showToast('លេខសម្ងាត់ថ្មីត្រូវតែមានយ៉ាងហោចណាស់ ៤ ខ្ទង់!', 'error');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showToast('លេខសម្ងាត់ថ្មី និងការបញ្ជាក់មិនត្រូវគ្នាទេ!', 'error');
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    try {
+      await setDoc(doc(db, 'artifacts', APP_ID, 'app_users', user.id), {
+        ...user,
+        password: newPassword
+      });
+      showToast('ផ្លាស់ប្ដូរលេខសម្ងាត់ជោគជ័យ!', 'success');
+      // Reset state
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setIsChangingPassword(false);
+    } catch (err) {
+      console.error(err);
+      showToast('មានបញ្ហាក្នុងការប្តូរលេខសម្ងាត់!', 'error');
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
 
@@ -355,8 +410,13 @@ export default function App() {
     const unsubConfig = onSnapshot(configRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
         const data = docSnapshot.data();
-        if (data && data.sheetsWebhookUrl) {
-          setSheetsWebhookUrl(data.sheetsWebhookUrl);
+        if (data) {
+          if (data.sheetsWebhookUrl !== undefined) {
+            setSheetsWebhookUrl(data.sheetsWebhookUrl);
+          }
+          if (data.isAutoSyncEnabled !== undefined) {
+            setIsAutoSyncEnabled(data.isAutoSyncEnabled);
+          }
         }
       }
     });
@@ -394,7 +454,7 @@ export default function App() {
   // GOOGLE SHEETS API HANDLERS
   // ----------------------------------------------------
   const triggerGoogleSheetsLog = async (log: StockLog) => {
-    if (!sheetsWebhookUrl) return;
+    if (!sheetsWebhookUrl || !isAutoSyncEnabled) return;
     const payload = {
       action: 'log',
       date: new Date(log.timestamp).toLocaleString('km-KH'),
@@ -416,7 +476,7 @@ export default function App() {
   };
 
   const triggerGoogleSheetsSale = async (txn: Transaction) => {
-    if (!sheetsWebhookUrl) return;
+    if (!sheetsWebhookUrl || !isAutoSyncEnabled) return;
     const totalQty = txn.items.reduce((sum, item) => sum + item.quantity, 0);
     const itemsList = txn.items.map((i) => `${i.product.name} (x${i.quantity})`).join(', ');
     const payload = {
@@ -442,6 +502,13 @@ export default function App() {
         body: JSON.stringify(payload)
       });
     } catch (e) {}
+  };
+
+  const handleToggleAutoSync = async () => {
+    const nextVal = !isAutoSyncEnabled;
+    setIsAutoSyncEnabled(nextVal);
+    await saveWebappUrlToFirestore(sheetsWebhookUrl, nextVal);
+    showToast(nextVal ? 'បានបើកមុខងារបញ្ជូនស្វ័យប្រវត្ត!' : 'បានបិទមុខងារបញ្ជូនស្វ័យប្រវត្ត!', 'info');
   };
 
   const handleTestSheetsConnection = async () => {
@@ -1040,6 +1107,7 @@ export default function App() {
             onOpenProfile={() => setIsProfileOpen(true)}
             user={user}
             userRole={userRole}
+            isAutoSyncEnabled={isAutoSyncEnabled}
           />
 
         {/* Content View Overlay */}
@@ -1171,126 +1239,347 @@ export default function App() {
 
       {/* profile & Google integration dialog trigger */}
       {isProfileOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-end md:items-center z-[70] p-0 md:p-4 font-khmer">
-          <div className="bg-white w-full max-w-md md:max-w-lg rounded-t-[32px] md:rounded-[32px] p-6 pb-6 shadow-2xl h-[85vh] md:h-auto md:max-h-[90vh] flex flex-col relative">
+        <div 
+          onClick={() => {
+            setIsProfileOpen(false);
+            setIsChangingPassword(false);
+            setCurrentPassword('');
+            setNewPassword('');
+            setConfirmPassword('');
+          }}
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-end md:items-center z-[70] p-0 md:p-4 font-khmer select-none"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white w-full max-w-md md:max-w-lg rounded-t-[32px] md:rounded-[32px] p-6 pb-6 shadow-2xl h-[90vh] md:h-auto md:max-h-[90vh] flex flex-col relative animate-slideUp border-t border-slate-100"
+          >
+            {/* Top Indicator for Mobile Drag feeling */}
             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 shrink-0 md:hidden"></div>
+            
+            {/* Modal Header */}
             <div className="flex justify-between items-center pb-3 border-b border-slate-100 shrink-0">
-              <h3 className="text-lg md:text-xl font-black text-slate-800">ព័ត៌មានគណនី</h3>
+              <div className="flex items-center gap-2">
+                <div className="w-2.5 h-2.5 bg-blue-600 rounded-full animate-pulse"></div>
+                <h3 className="text-lg md:text-xl font-black text-slate-800">គ្រប់គ្រងគណនី</h3>
+              </div>
               <button
                 type="button"
-                onClick={() => setIsProfileOpen(false)}
-                className="p-2 hover:bg-slate-200 bg-slate-100 rounded-full text-slate-500 active:scale-95 transition"
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  setIsChangingPassword(false);
+                  setCurrentPassword('');
+                  setNewPassword('');
+                  setConfirmPassword('');
+                }}
+                className="p-2 hover:bg-slate-100 active:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 active:scale-95 transition"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="overflow-y-auto custom-scroll py-4 md:py-6 space-y-5">
-              <div className="bg-slate-50 p-6 rounded-3xl flex flex-col items-center text-center border border-slate-100 relative overflow-hidden">
-                <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-100 rounded-full opacity-40"></div>
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-blue-100 border-4 border-white shadow-md flex items-center justify-center text-3xl font-black overflow-hidden mb-3 z-10">
-                  {user && user.photoURL ? (
-                    <img src={user.photoURL} alt={user.displayName || 'photo'} className="w-full h-full object-cover" />
-                  ) : (
-                    <UserIcon className="w-10 h-10 text-blue-700" />
-                  )}
-                </div>
-                
-                <>
-                  <h4 className="text-base md:text-lg font-black text-slate-800 z-10">{user?.displayName || user?.username || 'ម្ចាស់ហាង'}</h4>
-                  {user?.email && (
-                    <p className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full mt-1.5 mb-2 z-10">
-                      📬 {user.email}
-                    </p>
-                  )}
-                  <p className="text-[11px] font-bold text-emerald-600 mb-4 z-10">
-                    ☁️ ទិន្នន័យត្រូវបានរក្សាទុកលើ Cloud
-                  </p>
-                  
-                  <div className="flex flex-col gap-2 w-full z-10 px-4">
-                    {userRole !== 'admin' && (
-                      <div className="bg-white/80 rounded-2xl p-4 mb-2 text-left border border-blue-100 shadow-sm flex flex-col gap-2 relative overflow-hidden backdrop-blur-md">
-                        <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-blue-100 to-transparent rounded-bl-full opacity-50"></div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                            <Shield className="w-3.5 h-3.5" />
-                          </div>
-                          <div className="text-xs text-slate-500 font-bold uppercase tracking-wider">ស្ថានភាពសេវាកម្ម</div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold text-slate-600">កញ្ចប់សេវាកម្ម៖</span>
-                          <span className="text-sm font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">{user?.subscriptionPlan || 'ឥតគិតថ្លៃ'}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold text-slate-600">ថ្ងៃផុតកំណត់៖</span>
-                          <span className="text-xs md:text-sm font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-100">
-                            {user?.subscriptionEnd ? new Date(user.subscriptionEnd).toLocaleString('km-KH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'មិនទាន់មាន'}
+            {/* Segment Controls (Mobile-first Navigation Tabs) */}
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl shrink-0 gap-1 my-4">
+              <button
+                type="button"
+                onClick={() => setProfileActiveTab('profile')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
+                  profileActiveTab === 'profile'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 active:bg-white/40'
+                }`}
+              >
+                <UserIcon className="w-3.5 h-3.5" />
+                <span>គណនី</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setProfileActiveTab('shop')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
+                  profileActiveTab === 'shop'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 active:bg-white/40'
+                }`}
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span>ព័ត៌មានហាង</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setProfileActiveTab('sync')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
+                  profileActiveTab === 'sync'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700 active:bg-white/40'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                <span>ទិន្នន័យ & Sync</span>
+              </button>
+            </div>
+
+            {/* Tabbed Contents Container */}
+            <div className="overflow-y-auto custom-scroll flex-1 pr-1 pb-4 space-y-4">
+              
+              {/* TAB 1: PROFILE & ACCOUNT */}
+              {profileActiveTab === 'profile' && (
+                <div className="space-y-4 animate-fadeIn">
+                  {/* Avatar Profile Card */}
+                  <div className="bg-gradient-to-b from-slate-50 to-white p-5 rounded-[24px] flex flex-col items-center text-center border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div className="absolute -right-6 -top-6 w-24 h-24 bg-blue-50 rounded-full opacity-40"></div>
+                    
+                    <div className="relative mb-3">
+                      <div className="w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-white shadow-md overflow-hidden flex items-center justify-center bg-gradient-to-tr from-blue-500 to-indigo-600">
+                        {user && user.photoURL ? (
+                          <img src={user.photoURL} alt={user.displayName || 'photo'} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white text-3xl font-black">
+                            {(user?.displayName || user?.username || 'U').charAt(0).toUpperCase()}
                           </span>
-                        </div>
+                        )}
                       </div>
+                      <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"></span>
+                    </div>
+
+                    <h4 className="text-base md:text-lg font-black text-slate-800">{user?.displayName || user?.username || 'ម្ចាស់ហាង'}</h4>
+                    {user?.email && (
+                      <p className="text-xs font-bold text-slate-500 mt-1">
+                        📬 {user.email}
+                      </p>
                     )}
-                    {userRole !== 'admin' && (
+                    
+                    <div className="mt-2.5 inline-flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-[10px] md:text-xs font-bold text-emerald-600 px-3 py-1 rounded-full">
+                      <Cloud className="w-3.5 h-3.5" />
+                      <span>ទិន្នន័យត្រូវបានរក្សាទុកលើ Cloud (Secure)</span>
+                    </div>
+                  </div>
+
+                  {/* VIP Subscription Details */}
+                  {userRole !== 'admin' && (
+                    <div className="bg-slate-900 text-white rounded-[24px] p-5 text-left shadow-lg flex flex-col gap-3 relative overflow-hidden border border-slate-800">
+                      <div className="absolute right-0 top-0 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl"></div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-blue-500/20 flex items-center justify-center text-blue-400 border border-blue-500/30">
+                            <Shield className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest font-sans">ស្ថានភាពគណនី</div>
+                            <div className="text-sm font-black text-white">{user?.subscriptionPlan || 'ឥតគិតថ្លៃ'}</div>
+                          </div>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                          សកម្ម
+                        </span>
+                      </div>
+                      <div className="h-[1px] bg-slate-800 my-1"></div>
+                      <div className="flex justify-between items-center text-xs text-slate-300 font-bold">
+                        <span>ថ្ងៃផុតកំណត់៖</span>
+                        <span className="text-blue-300 bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20 font-sans">
+                          {user?.subscriptionEnd ? new Date(user.subscriptionEnd).toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' }) : 'គ្មានដែនកំណត់'}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Change Password Panel */}
+                  <div className="space-y-3">
+                    {isChangingPassword ? (
+                      <form onSubmit={handleUpdatePassword} className="bg-slate-50 border border-slate-200 rounded-[24px] p-5 text-left space-y-3 shadow-inner my-1">
+                        <div className="flex items-center gap-2 border-b border-slate-200 pb-2.5">
+                          <Key className="w-4 h-4 text-indigo-500" />
+                          <h5 className="text-sm font-black text-slate-800">ប្ដូរលេខសម្ងាត់ថ្មី</h5>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] md:text-xs font-bold text-slate-500">លេខសម្ងាត់បច្ចុប្បន្ន <span className="text-rose-500">*</span></label>
+                          <input
+                            type="password"
+                            required
+                            placeholder="បញ្ចូលលេខសម្ងាត់បច្ចុប្បន្ន"
+                            value={currentPassword}
+                            onChange={(e) => setCurrentPassword(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-bold text-slate-800 transition shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] md:text-xs font-bold text-slate-500">លេខសម្ងាត់ថ្មី <span className="text-rose-500">*</span></label>
+                          <input
+                            type="password"
+                            required
+                            placeholder="បញ្ចូលលេខសម្ងាត់ថ្មី (យ៉ាងហោច ៤ ខ្ទង់)"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-bold text-slate-800 transition shadow-sm"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[11px] md:text-xs font-bold text-slate-500">បញ្ជាក់លេខសម្ងាត់ថ្មី <span className="text-rose-500">*</span></label>
+                          <input
+                            type="password"
+                            required
+                            placeholder="បញ្ចូលបញ្ជាក់លេខសម្ងាត់ថ្មី"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs md:text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none font-bold text-slate-800 transition shadow-sm"
+                          />
+                        </div>
+                        <div className="flex gap-2 pt-2">
+                          <button
+                            type="submit"
+                            disabled={isUpdatingPassword}
+                            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white font-black py-2.5 px-4 rounded-xl text-xs md:text-sm active:scale-95 transition flex-1 shadow-md"
+                          >
+                            {isUpdatingPassword ? 'កំពុងរក្សាទុក...' : 'រក្សាទុក'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsChangingPassword(false);
+                              setCurrentPassword('');
+                              setNewPassword('');
+                              setConfirmPassword('');
+                            }}
+                            className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs md:text-sm transition active:scale-95"
+                          >
+                            បោះបង់
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
                       <button
                         type="button"
-                        onClick={() => {
-                          setIsProfileOpen(false);
-                          setIsShopSettingsOpen(true);
-                        }}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl text-xs md:text-sm active:scale-95 transition shadow-sm w-full flex items-center justify-center gap-2"
+                        onClick={() => setIsChangingPassword(true)}
+                        className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold py-3.5 px-5 rounded-[20px] text-xs md:text-sm active:scale-95 transition shadow-sm w-full flex items-center justify-between gap-2"
                       >
-                        <Settings className="w-4 h-4" />
-                        កំណត់ហាង
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <span>ផ្លាស់ប្ដូរលេខសម្ងាត់</span>
+                        </div>
+                        <Key className="w-4 h-4 text-slate-400" />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={handleExportSalesHistory}
-                      className="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-bold py-2.5 px-6 rounded-xl text-xs md:text-sm active:scale-95 transition shadow-sm w-full flex items-center justify-center gap-2"
-                    >
-                      <FileSpreadsheet className="w-4 h-4" />
-                      ទាញយក Excel
-                    </button>
+                  </div>
+
+                  {/* Logout Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleLogout();
+                      setIsProfileOpen(false);
+                    }}
+                    className="bg-rose-50 hover:bg-rose-100 border border-rose-100 text-rose-600 font-bold py-3.5 px-6 rounded-[20px] text-xs md:text-sm active:scale-95 transition shadow-sm w-full flex items-center justify-center gap-2 mt-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>ចាកចេញពីគណនី</span>
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 2: SHOP SETTINGS & PRESENTATION */}
+              {profileActiveTab === 'shop' && (
+                <div className="space-y-4 animate-fadeIn">
+                  {/* Shop Front Visual Card */}
+                  <div className="bg-gradient-to-br from-indigo-500 to-blue-600 text-white p-5 rounded-[24px] relative overflow-hidden shadow-md flex flex-col justify-between min-h-[140px]">
+                    <div className="absolute -right-8 -bottom-8 w-28 h-28 bg-white/10 rounded-full"></div>
+                    <div className="absolute right-4 top-4">
+                      <Store className="w-12 h-12 text-white/20" />
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-bold bg-white/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider font-sans">ម្ចាស់ហាងលក់រាយ</span>
+                      <h4 className="text-lg md:text-xl font-black mt-1">{shopSettings.name || 'ហាងរបស់ខ្ញុំ'}</h4>
+                    </div>
+                    <div className="mt-4 text-xs text-white/80 font-bold flex flex-col gap-1">
+                      <div>📞 {shopSettings.phone || '-'}</div>
+                      <div className="truncate max-w-[280px]">📍 {shopSettings.address || '-'}</div>
+                    </div>
+                  </div>
+
+                  {/* Detailed Information Grid */}
+                  <div className="border border-slate-150 rounded-[24px] p-5 bg-white shadow-sm flex flex-col gap-3">
+                    <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2">
+                      ព័ត៌មានលម្អិតពីហាង
+                    </h5>
+                    
+                    <div className="space-y-3.5 text-xs md:text-sm">
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-slate-500 font-bold shrink-0">ឈ្មោះហាង៖</span>
+                        <span className="font-black text-slate-800 text-right">{shopSettings.name || 'មិនទាន់កំណត់'}</span>
+                      </div>
+                      <div className="h-[1px] bg-slate-100"></div>
+                      
+                      <div className="flex justify-between items-center gap-4">
+                        <span className="text-slate-500 font-bold shrink-0">លេខទូរស័ព្ទ៖</span>
+                        <span className="font-bold text-slate-800 text-right">{shopSettings.phone || 'មិនទាន់កំណត់'}</span>
+                      </div>
+                      <div className="h-[1px] bg-slate-100"></div>
+
+                      <div className="flex justify-between items-start gap-4">
+                        <span className="text-slate-500 font-bold shrink-0">អាសយដ្ឋាន៖</span>
+                        <span className="font-bold text-slate-800 text-right leading-relaxed max-w-[200px] break-words">{shopSettings.address || 'មិនទាន់កំណត់'}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action to Edit Shop Config */}
+                  {userRole !== 'admin' && (
                     <button
                       type="button"
                       onClick={() => {
-                        handleLogout();
                         setIsProfileOpen(false);
+                        setIsShopSettingsOpen(true);
                       }}
-                      className="bg-rose-100 hover:bg-rose-200 text-rose-600 font-bold py-2.5 px-6 rounded-xl text-xs md:text-sm active:scale-95 transition shadow-sm w-full flex items-center justify-center gap-2"
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-black py-3.5 px-6 rounded-[20px] text-xs md:text-sm active:scale-95 transition shadow-md w-full flex items-center justify-center gap-2 mt-2"
                     >
-                      ចាកចេញពីគណនី
+                      <Settings className="w-4 h-4" />
+                      <span>កែសម្រួលព័ត៌មានហាង</span>
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 3: DATA EXPORT & SYNC */}
+              {profileActiveTab === 'sync' && (
+                <div className="space-y-4 animate-fadeIn">
+                  {/* Action Panel for Direct Sales Export */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-[24px] p-5 shadow-sm space-y-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-700">
+                        <FileSpreadsheet className="w-4 h-4" />
+                      </div>
+                      <h5 className="text-sm font-black text-slate-800">ទាញយកប្រវត្តិលក់</h5>
+                    </div>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      ទាញយកទិន្នន័យប្រវត្តិនៃការលក់ និងប្រតិបត្តិការទាំងអស់ជាទម្រង់ Microsoft Excel សម្រាប់ធ្វើការវិភាគ ឬរក្សាទុក។
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleExportSalesHistory}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 px-4 rounded-xl text-xs md:text-sm active:scale-95 transition shadow-md w-full flex items-center justify-center gap-2"
+                    >
+                      <FileSpreadsheet className="w-4 h-4" />
+                      ទាញយក Excel (Sales History)
                     </button>
                   </div>
-                </>
-              </div>
 
-              {/* Guide block */}
-              <div className="border border-slate-200 rounded-3xl p-4 bg-white shadow-sm flex flex-col gap-3 font-khmer">
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest block font-sans">
-                  ព័ត៌មានហាង
-                </h4>
-                <div className="grid grid-cols-2 gap-y-2 text-xs text-slate-600">
-                  <div>ឈ្មោះហាង៖</div>
-                  <div className="font-bold text-right text-slate-800">{shopSettings.name}</div>
-                  <div>លេខទូរស័ព្ទ៖</div>
-                  <div className="font-bold text-right text-slate-800">{shopSettings.phone || '-'}</div>
-                  <div>អាសយដ្ឋាន៖</div>
-                  <div className="font-bold text-right text-slate-800 max-w-[200px] truncate">{shopSettings.address || '-'}</div>
+                  {/* GSheets Setup integration */}
+                  <GoogleSheetsSetup
+                    sheetsWebhookUrl={sheetsWebhookUrl}
+                    isAutoSyncEnabled={isAutoSyncEnabled}
+                    onToggleAutoSync={handleToggleAutoSync}
+                    onSaveSheetsUrl={async (url) => {
+                      setSheetsWebhookUrl(url);
+                      await saveWebappUrlToFirestore(url, isAutoSyncEnabled);
+                      showToast('បានរក្សាទុក URL ជោគជ័យ!', 'success');
+                    }}
+                    onTestSheetsUrl={handleTestSheetsConnection}
+                    onManualSync={handleManualSyncAll}
+                    onExportStockLogs={handleExportStockLogs}
+                    onExportCurrentStock={handleExportCurrentStock}
+                  />
                 </div>
-              </div>
+              )}
 
-              {/* GSheets Setup in Profile */}
-              <GoogleSheetsSetup
-                sheetsWebhookUrl={sheetsWebhookUrl}
-                onSaveSheetsUrl={(url) => {
-                  setSheetsWebhookUrl(url);
-                  showToast('បានរក្សាទុក URL ជោគជ័យ!', 'success');
-                }}
-                onTestSheetsUrl={handleTestSheetsConnection}
-                onManualSync={handleManualSyncAll}
-                onExportStockLogs={handleExportStockLogs}
-                onExportCurrentStock={handleExportCurrentStock}
-              />
             </div>
           </div>
         </div>

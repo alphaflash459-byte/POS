@@ -14,6 +14,7 @@ interface HeaderProps {
   onOpenProfile: () => void;
   user: any | null;
   userRole?: 'admin' | 'user' | null;
+  isAutoSyncEnabled?: boolean;
 }
 
 export default function Header({
@@ -24,6 +25,7 @@ export default function Header({
   onOpenProfile,
   user,
   userRole,
+  isAutoSyncEnabled = true,
 }: HeaderProps) {
   return (
     <header className="bg-white border-b border-slate-200 text-slate-800 px-2 md:px-4 py-2.5 h-[65px] flex items-center shrink-0 relative z-0">
@@ -60,7 +62,35 @@ export default function Header({
         </div>
 
         {/* Right: Controls */}
-        <div className="flex flex-col md:flex-row items-end md:items-center space-y-2 md:space-y-0 md:space-x-3">
+        <div className="flex items-center space-x-2 md:space-x-3">
+          {userRole !== 'admin' && (
+            sheetsWebhookUrl ? (
+              <div 
+                onClick={onOpenProfile}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] md:text-xs font-black border transition-all cursor-pointer active:scale-95 ${
+                  isAutoSyncEnabled 
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 shadow-sm' 
+                    : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 shadow-sm'
+                }`}
+              >
+                <Cloud className={`w-3.5 h-3.5 ${isAutoSyncEnabled ? 'text-emerald-500' : 'text-amber-500'}`} />
+                <span className="hidden sm:inline">Sheets Sync:</span>
+                <span>{isAutoSyncEnabled ? 'បើកស្វ័យប្រវត្តិ' : 'បានផ្អាក'}</span>
+                <span className="relative flex h-2 w-2">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${isAutoSyncEnabled ? 'bg-emerald-400' : 'bg-amber-400'} opacity-75`}></span>
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isAutoSyncEnabled ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                </span>
+              </div>
+            ) : (
+              <div 
+                onClick={onOpenProfile}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] md:text-xs font-black bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100 transition-all cursor-pointer active:scale-95"
+              >
+                <Cloud className="w-3.5 h-3.5 text-slate-400" />
+                <span>មិនទាន់ភ្ជាប់ Google Sheets</span>
+              </div>
+            )
+          )}
         </div>
       </div>
     </header>

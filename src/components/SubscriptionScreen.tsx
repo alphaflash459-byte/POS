@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Upload, CheckCircle2, Shield, Calendar, CreditCard, Loader2, X } from 'lucide-react';
 import { User, SubscriptionRequest } from '../types';
-import { doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { doc, updateDoc, setDoc, onSnapshot, collection, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { APP_ID } from '../App';
 
@@ -17,6 +17,44 @@ const PLANS = [
   { id: 'yearly', name: 'ប្រចាំឆ្នាំ', price: 60, days: 365, color: 'bg-purple-50 text-purple-600 border-purple-200' },
 ];
 
+const compressImage = (base64Str: string, maxWidth = 800, maxHeight = 800, quality = 0.7): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      } else {
+        resolve(base64Str);
+      }
+    };
+    img.onerror = () => {
+      resolve(base64Str);
+    };
+  });
+};
+
 export default function SubscriptionScreen({ user, onSuccess, onLogout }: SubscriptionScreenProps) {
   const [selectedPlan, setSelectedPlan] = useState(PLANS[1]);
   const [file, setFile] = useState<File | null>(null);
@@ -30,29 +68,28 @@ export default function SubscriptionScreen({ user, onSuccess, onLogout }: Subscr
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'artifacts', APP_ID), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const requests: Record<string, SubscriptionRequest> = data.subscription_requests || {};
-        const userPendingRequest = Object.values(requests).find(
-          req => req.userId === user.id && req.status === 'pending'
-        );
-        
-        if (userPendingRequest) {
-          setIsPending(true);
+    const q = query(
+      collection(db, 'artifacts', APP_ID, 'subscription_requests'),
+      where('userId', '==', user.id)
+    );
+    const unsub = onSnapshot(q, (snapshot) => {
+      const requests: SubscriptionRequest[] = [];
+      snapshot.forEach((d) => {
+        requests.push({ id: d.id, ...d.data() } as SubscriptionRequest);
+      });
+
+      const userPendingRequest = requests.find(req => req.status === 'pending');
+      
+      if (userPendingRequest) {
+        setIsPending(true);
+      } else {
+        setIsPending(false);
+        if (user.subscriptionEnd && new Date(user.subscriptionEnd) > new Date()) {
+          onSuccess();
         } else {
-          setIsPending(false);
-          // Check if user is now subscribed (admin approved)
-          if (user.subscriptionEnd && new Date(user.subscriptionEnd) > new Date()) {
-            onSuccess();
-          } else {
-            // Check if there was a rejected request
-            const userRejectedRequest = Object.values(requests).find(
-              req => req.userId === user.id && req.status === 'rejected'
-            );
-            if (userRejectedRequest) {
-              setError('សំណើរបស់អ្នកត្រូវបានបដិសេធ សូមពិនិត្យមើលវិក្កយបត្រម្ដងទៀត។');
-            }
+          const userRejectedRequest = requests.find(req => req.status === 'rejected');
+          if (userRejectedRequest) {
+            setError('សំណើរបស់អ្នកត្រូវបានបដិសេធ សូមពិនិត្យមើលវិក្កយបត្រម្ដងទៀត។');
           }
         }
       }
@@ -88,24 +125,24 @@ export default function SubscriptionScreen({ user, onSuccess, onLogout }: Subscr
     setError(null);
 
     try {
-      // Save subscription request to Firestore
+      let compressedReceipt = preview;
+      if (preview.startsWith('data:image/')) {
+        compressedReceipt = await compressImage(preview);
+      }
+
       const reqId = Date.now().toString();
-      await setDoc(doc(db, 'artifacts', APP_ID), {
-        subscription_requests: {
-          [reqId]: {
-            id: reqId,
-            userId: user.id,
-            username: user.username,
-            planId: selectedPlan.id,
-            planName: selectedPlan.name,
-            price: selectedPlan.price,
-            days: selectedPlan.days,
-            receiptImage: preview,
-            status: 'pending',
-            createdAt: new Date().toISOString()
-          }
-        }
-      }, { merge: true });
+      await setDoc(doc(db, 'artifacts', APP_ID, 'subscription_requests', reqId), {
+        id: reqId,
+        userId: user.id,
+        username: user.username,
+        planId: selectedPlan.id,
+        planName: selectedPlan.name,
+        price: selectedPlan.price,
+        days: selectedPlan.days,
+        receiptImage: compressedReceipt,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      });
       
       setIsPending(true);
     } catch (err) {
