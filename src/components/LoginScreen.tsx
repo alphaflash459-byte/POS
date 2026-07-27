@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../types';
-import { Store, ShieldCheck, KeyRound, User as UserIcon } from 'lucide-react';
+import { Store, ShieldCheck, KeyRound, User as UserIcon, Download, Smartphone } from 'lucide-react';
 
 interface LoginProps {
   users: User[];
@@ -13,6 +13,36 @@ export default function LoginScreen({ users, onLogin, onRegister }: LoginProps) 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } else {
+      // Fallback message if PWA prompt is not available
+      alert("សូមចុច Add to Home Screen (ឬ Install App) នៅក្នុង Browser Menu របស់អ្នក ដើម្បីដំឡើងកម្មវិធី។");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +139,21 @@ export default function LoginScreen({ users, onLogin, onRegister }: LoginProps) 
             </div>
           </form>
         </div>
+      </div>
+      
+      {/* Download App Button */}
+      <div className="mt-8 text-center">
+        <a 
+          href="#"
+          className="inline-flex items-center gap-2 px-5 py-3 bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-full shadow-sm hover:bg-white hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 group text-slate-700 cursor-pointer"
+          onClick={handleInstallClick}
+        >
+          <div className="bg-blue-100 p-1.5 rounded-full group-hover:bg-blue-200 transition-colors">
+            <Smartphone className="w-4 h-4 text-blue-600" />
+          </div>
+          <span className="text-xs font-black tracking-wide">ដំឡើងកម្មវិធី (Install App)</span>
+          <Download className="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition-colors ml-1" />
+        </a>
       </div>
     </div>
   );
