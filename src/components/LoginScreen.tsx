@@ -40,7 +40,11 @@ export default function LoginScreen({ users, onLogin, onRegister }: LoginProps) 
       }
     } else {
       // Fallback message if PWA prompt is not available
-      alert("សូមចុច Add to Home Screen (ឬ Install App) នៅក្នុង Browser Menu របស់អ្នក ដើម្បីដំឡើងកម្មវិធី។");
+      if (window.self !== window.top) {
+        alert("សូមបើកកម្មវិធីនេះក្នុង Tab ថ្មី (Open in New Tab) សិន ទើបអាចដំឡើងកម្មវិធីបាន ព្រោះអ្នកកំពុងមើលក្នុង Preview ។");
+      } else {
+        alert("សូមចុច Add to Home Screen (ឬ Install App) នៅក្នុង Browser Menu របស់អ្នក ដើម្បីដំឡើងកម្មវិធី។");
+      }
     }
   };
 
